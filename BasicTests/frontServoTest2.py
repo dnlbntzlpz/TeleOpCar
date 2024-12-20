@@ -28,20 +28,16 @@ def set_servo_angle(angle):
     sleep(1)  # Allow time for the servo to move
 
 try:
-    print("Enter an angle between 0 and 180 to move the servo. Type 'exit' to quit.")
+    print("Servo will move continuously from 0° to 180° and back. Press Ctrl+C to stop.")
 
     while True:
-        user_input = input("Enter angle: ")
-
-        if user_input.lower() == 'exit':
-            print("Exiting program.")
-            break
-
-        try:
-            angle = float(user_input)
+        # Move from 0 to 180 degrees
+        for angle in range(0, 181, 10):  # Increment by 10 degrees
             set_servo_angle(angle)
-        except ValueError:
-            print("Invalid input. Please enter a numeric angle between 0 and 180, or type 'exit' to quit.")
+
+        # Move from 180 to 0 degrees
+        for angle in range(180, -1, -10):  # Decrement by 10 degrees
+            set_servo_angle(angle)
 
 except KeyboardInterrupt:
     print("\nProgram interrupted by user.")
