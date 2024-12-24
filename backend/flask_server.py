@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, Response
-from motor_control import motor_forward, motor_backward, motor_stop
+from motor_control import motor_forward, motor_backward, motor_stop, steer_left, steer_right, steer_center
 import cv2
 import os
 
@@ -26,7 +26,6 @@ def generate_frames():
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-
 @app.route("/")
 def index():
     """Serve the dashboard HTML."""
@@ -34,19 +33,30 @@ def index():
 
 @app.route("/control", methods=["POST"])
 def control():
-    """Handle control commands sent from the frontend."""
-    data = request.json
-    action = data.get("action")
-    speed = data.get("speed", 0.9)  # Default speed
+    """Handle control commands from the frontend."""
+    try:
+        data = request.json
+        action = data.get("action")
+        speed = float(data.get("speed", 1.0))
 
-    if action == "forward":
-        motor_forward(speed)
-    elif action == "backward":
-        motor_backward(speed)
-    elif action == "stop":
-        motor_stop()
+        # Map commands to functions
+        if action == "forward":
+            motor_forward(speed)
+        elif action == "backward":
+            motor_backward(speed)
+        elif action == "stop":
+            motor_stop()
+        elif action == "left":
+            steer_left()
+        elif action == "right":
+            steer_right()
+        elif action == "center":
+            steer_center()
 
-    return jsonify({"status": "success", "action": action})
+        return jsonify({"status": "success", "action": action})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 
 @app.route("/video_feed")
 def video_feed():
