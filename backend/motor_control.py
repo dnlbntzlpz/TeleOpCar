@@ -37,8 +37,9 @@ def motor_stop():
 
 # Servo control functions
 last_servo_angle = None
-DEADBAND_THRESHOLD = 3  # µsec equivalent for your calculations
+DEADBAND_THRESHOLD = 1  # µsec equivalent for your calculations
 
+# Servo control functions remain unchanged
 def set_servo_angle(angle):
     global last_servo_angle
 
@@ -56,7 +57,8 @@ def set_servo_angle(angle):
     last_servo_angle = angle
 
     print(f"Set servo to {angle}° (Duty Cycle: {duty_cycle:.4f})")
-    sleep(0.5)  # Allow time for the servo to move
+    #sleep(0.5)  # Allow time for the servo to move
+
 
 
 def steer_left():

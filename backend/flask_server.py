@@ -1,5 +1,13 @@
 from flask import Flask, render_template, request, jsonify, Response
-from motor_control import motor_forward, motor_backward, motor_stop, steer_left, steer_right, steer_center
+from motor_control import (
+    motor_forward,
+    motor_backward,
+    motor_stop,
+    steer_left,
+    steer_right,
+    steer_center,
+    set_servo_angle
+    )
 import cv2
 import os
 
@@ -37,13 +45,15 @@ def control():
     try:
         data = request.json
         action = data.get("action")
-        speed = float(data.get("speed", 1.0))
+        value = float(data.get("value", 0))  # Use `value` for the servo angle
 
         # Map commands to functions
-        if action == "forward":
-            motor_forward(speed)
+        if action == "servo":
+            set_servo_angle(value)  # Pass angle to the servo control function
+        elif action == "forward":
+            motor_forward(value)
         elif action == "backward":
-            motor_backward(speed)
+            motor_backward(value)
         elif action == "stop":
             motor_stop()
         elif action == "left":
@@ -56,6 +66,7 @@ def control():
         return jsonify({"status": "success", "action": action})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
 
 
 @app.route("/video_feed")
