@@ -126,3 +126,27 @@ window.addEventListener('gamepaddisconnected', (event) => {
     gamepadIndex = null;
     document.getElementById('gamepad-status').innerText = 'Gamepad disconnected.';
 });
+
+// Listen for keyboard events
+document.addEventListener('keydown', (event) => {
+    switch (event.key.toLowerCase()) {
+        case 'w': // Forward
+            sendCommand('forward', 1.0);
+            break;
+        case 's': // Backward
+            sendCommand('backward', 0.9);
+            break;
+        case 'a': // Steer Left
+            sendCommand('left', 0);
+            break;
+        case 'd': // Steer Right
+            sendCommand('right', 0);
+            break;
+        case 'x': // Stop
+            sendCommand('stop', 0);
+            break;
+        case 'c': // Center
+            sendCommand('center', 0);
+            break;
+    }
+});

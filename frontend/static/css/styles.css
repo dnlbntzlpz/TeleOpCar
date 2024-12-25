@@ -1,30 +1,120 @@
 body {
     font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f4f4f4;
     margin: 0;
     padding: 0;
-}
-
-.container {
-    margin-top: 50px;
-}
-
-h1 {
+    background-color: #f4f4f4;
     color: #333;
 }
 
-.controls button {
-    padding: 15px 30px;
-    font-size: 18px;
-    margin: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
 }
 
-.controls button:hover {
-    background-color: #0056b3;
+.top-section {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start; /* Align camera and controls to the top */
+}
+
+.video-feed {
+    flex: 2; /* Give more space to the camera feed */
+}
+
+#camera-feed {
+    width: 100%;
+    max-width: 640px;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.controls {
+    flex: 1; /* Controls take less space */
+}
+
+.keyboard-controls {
+    display: grid;
+    grid-template-rows: repeat(3, 50px);
+    gap: 10px;
+    justify-content: center;
+}
+
+.keyboard-controls .row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.keyboard-controls button {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+    font-weight: bold;
+    background-color: #fff;
+    color: #333;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.keyboard-controls button:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.keyboard-legend {
+    margin-top: 20px;
+    text-align: left;
+    font-size: 16px;
+}
+
+.keyboard-legend ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.keyboard-legend li {
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+.keyboard-legend strong {
+    color: #007bff;
+}
+
+.status-indicator {
+    margin-top: 30px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three columns for icons */
+    gap: 20px;
+    justify-items: center;
+    align-items: center;
+}
+
+.status-item {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.status-item span {
+    font-size: 30px;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.status-item p {
+    margin: 0;
+    font-size: 14px;
+}
+
+#gamepad-status {
+    color: red;
 }

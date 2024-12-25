@@ -8,21 +8,82 @@
 </head>
 <body>
     <div class="container">
-        <h1>Teleoperation Car Dashboard</h1>
-        <div class="status">
-            <p id="gamepad-status">Waiting for gamepad connection...</p>
+        <!-- Flex Container for Camera Feed and Keyboard Controls -->
+        <div class="top-section">
+            <!-- Camera Feed Section -->
+            <div class="video-feed">
+                <h2>Camera Feed</h2>
+                <img src="/video_feed" alt="Camera Feed" id="camera-feed">
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls">
+                <h2>Keyboard</h2>
+                <div class="keyboard-controls">
+                    <div class="row">
+                        <button onclick="sendCommand('forward', 1.0)">W</button>
+                    </div>
+                    <div class="row">
+                        <button onclick="sendCommand('left', 0)">A</button>
+                        <button onclick="sendCommand('backward', 0.9)">S</button>
+                        <button onclick="sendCommand('right', 0)">D</button>
+                    </div>
+                    <div class="row">
+                        <button onclick="sendCommand('stop', 0)">X</button>
+                        <button onclick="sendCommand('center', 0)">C</button>
+                    </div>
+                </div>
+
+                <!-- Keyboard Control Legend -->
+                <div class="keyboard-legend">
+                    <h3>Keyboard Controls</h3>
+                    <ul>
+                        <li><strong>W</strong>: Move Forward</li>
+                        <li><strong>S</strong>: Move Backward</li>
+                        <li><strong>A</strong>: Steer Left</li>
+                        <li><strong>D</strong>: Steer Right</li>
+                        <li><strong>X</strong>: Stop</li>
+                        <li><strong>C</strong>: Center Steering</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="controls">
-            <button onclick="sendCommand('forward', 1.0)">Forward</button>
-            <button onclick="sendCommand('backward', 1.0)">Backward</button>
-            <button onclick="sendCommand('stop', 0)">Stop</button>
-            <button onclick="sendCommand('left', 0)">Left</button>
-            <button onclick="sendCommand('center', 0)">Center</button>
-            <button onclick="sendCommand('right', 0)">Right</button>
-        </div>
-        <div class="video-feed">
-            <h2>Camera Feed</h2>
-            <img src="/video_feed" alt="Camera Feed">
+
+        <!-- Status Indicator -->
+        <div class="status-indicator">
+            <h2>Sensors & Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span>🔥</span>
+                    <p>Temp</p>
+                    <p>--°C</p>
+                </div>
+                <div class="status-item">
+                    <span>⏱️</span>
+                    <p>Latency</p>
+                    <p>--ms</p>
+                </div>
+                <div class="status-item">
+                    <span>🎥</span>
+                    <p>FPS</p>
+                    <p>--</p>
+                </div>
+                <div class="status-item">
+                    <span>📊</span>
+                    <p>Signal</p>
+                    <p>85%</p>
+                </div>
+                <div class="status-item">
+                    <span>🎮</span>
+                    <p>Gamepad</p>
+                    <p id="gamepad-status">No Gamepad Detected</p>
+                </div>
+                <div class="status-item">
+                    <span>🔄</span>
+                    <p>CPU Load</p>
+                    <p>0%</p>
+                </div>
+            </div>
         </div>
     </div>
     <script src="/static/js/script.js"></script>
