@@ -97,19 +97,6 @@ function pollGamepad() {
                 console.log(`Brake: ${brake}`);
                 const reverseButton = gamepad.buttons[17]; // Button 17 for reverse
 
-                // if (acceleratorNormalized > 0.1) {
-                //     if (reverseButton && reverseButton.pressed) {
-                //         motorAction = { action: 'backward', speed: currentSpeed * acceleratorNormalized };
-                //         console.log(`Reverse at speed: ${currentSpeed * acceleratorNormalized}`);
-                //     } else{
-                //         motorAction = { action: 'forward', speed: currentSpeed * acceleratorNormalized };
-                //         console.log(`Forward at speed: ${currentSpeed * acceleratorNormalized}`);
-                //     }
-                // } else if (brake < 0.5) {
-                //     motorAction = { action: 'stop', speed: 0 }; // Stop when braking
-                //     console.log('Braking: Motor stopped');
-                // }
-
 
                 if (reverseButton && reverseButton.pressed) {
                     motorAction = { action: 'backward', speed: 0.9 };
@@ -134,12 +121,47 @@ function pollGamepad() {
             }
 
         }
-    } else if (deviceType === "controller") {
-        // Controller Logic
-        
-    } else {
-        console.warn("Unknown device type. Input ignored.");
-    }
+        else if (deviceType === "controller") {
+            // Controller Logic
+    
+            // Servo Control with Axis 0
+            const steering = gamepad.axes[0]; // Axis 0 for steering
+            const targetServoAngle = Math.round(mapRange(steering, -1, 1, 10, 170)); // Map -1 to 1 to 0 to 180
+    
+            // Send the servo angle only if it changes
+            if (targetServoAngle !== lastSteeringAngle) {
+                sendCommand("servo", targetServoAngle); // Send mapped servo angle
+                lastSteeringAngle = targetServoAngle; // Update last steering angle
+                console.log(`Controller Steering Servo to: ${targetServoAngle}°`);
+            }
+
+            // Accelerator and Brake Logic
+            const accelerator = gamepad.axes[5]; // Accelerator axis
+
+            if (accelerator > 0.2) {
+                motorAction = { action: 'backward', speed: 0.9 };
+                console.log(`Reverse at speed: 0.9`);
+            } else if (accelerator < -0.2) {
+                motorAction = { action: 'forward', speed: 1.0 };
+                console.log(`Forward at speed: ${currentSpeed}`);
+            } else {
+                motorAction = { action: 'stop', speed: 0 }; // Stop when braking
+                console.log('Braking: Motor stopped');
+            }
+
+            // Send motor command only if it changes
+            if (
+                motorAction &&
+                (motorAction.action !== lastMotorCommand.action ||
+                    motorAction.speed !== lastMotorCommand.speed)
+            ) {
+                sendCommand(motorAction.action, motorAction.speed);
+                lastMotorCommand = motorAction; // Update last motor command
+            }
+        } else {
+            console.warn("Unknown device type. Input ignored.");
+        }
+    } 
 
     requestAnimationFrame(pollGamepad);
 }
