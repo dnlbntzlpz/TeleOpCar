@@ -10,7 +10,7 @@ class CameraNode(Node):
 
         # Declare and retrieve parameters for camera device paths
         self.declare_parameter('front_left_camera', '/dev/video0')
-        self.declare_parameter('front_right_camera', '/dev/video1')
+        self.declare_parameter('front_right_camera', '/dev/video2')
 
         self.front_left_camera_path = self.get_parameter('front_left_camera').value
         self.front_right_camera_path = self.get_parameter('front_right_camera').value
