@@ -24,7 +24,9 @@ joystick.init()
 print(f"Using joystick: {joystick.get_name()}")
 
 def get_racing_wheel_input():
-    # Poll joystick axes directly to avoid event queue dependence
+    pygame.event.pump()  # Process event queue to get updated input states
+
+    # Normalize axis inputs
     wheel = joystick.get_axis(0)  # Steering wheel (-1.0 to 1.0)
     accelerator = (joystick.get_axis(1) + 1) / 2  # Normalize to 0.0 to 1.0
     brake = (joystick.get_axis(2) + 1) / 2        # Normalize to 0.0 to 1.0
@@ -39,7 +41,7 @@ try:
     print("Connected to the server.")
 
     while True:
-        # Poll joystick inputs directly
+        # Get normalized inputs
         inputs = get_racing_wheel_input()
 
         # Serialize inputs to JSON and send to the server
