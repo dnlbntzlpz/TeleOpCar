@@ -26,10 +26,14 @@ print(f"Using joystick: {joystick.get_name()}")
 def get_racing_wheel_input():
     pygame.event.pump()  # Process event queue to get updated input states
 
-    # Normalize axis inputs
-    wheel = joystick.get_axis(0)  # Steering wheel (-1.0 to 1.0)
-    accelerator = (joystick.get_axis(1) + 1) / 2  # Normalize to 0.0 to 1.0
-    brake = (joystick.get_axis(2) + 1) / 2        # Normalize to 0.0 to 1.0
+    # Ensure all axis values are explicitly cast to float
+    try:
+        wheel = float(joystick.get_axis(0)) if joystick.get_axis(0) is not None else 0.0
+        accelerator = float(joystick.get_axis(1)) if joystick.get_axis(1) is not None else 0.0
+        brake = float(joystick.get_axis(2)) if joystick.get_axis(2) is not None else 0.0
+    except Exception as e:
+        print(f"Error reading joystick inputs: {e}")
+        wheel, accelerator, brake = 0.0, 0.0, 0.0  # Default values
 
     return {"pedals": {"wheel": wheel, "accelerator": accelerator, "brake": brake}}
 
@@ -41,7 +45,7 @@ try:
     print("Connected to the server.")
 
     while True:
-        # Get normalized inputs
+        # Get inputs with explicit float casting
         inputs = get_racing_wheel_input()
 
         # Serialize inputs to JSON and send to the server

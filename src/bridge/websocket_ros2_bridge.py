@@ -45,12 +45,12 @@ class SocketROS2Bridge(Node):
                         # Parse JSON data
                         inputs = json.loads(message)
 
-                        # Extract raw values
-                        steering_input = inputs.get("pedals", {}).get("wheel", 0)  # Raw -1.0 to 1.0
+                        # Extract and explicitly cast raw values to float
+                        steering_input = float(inputs.get("pedals", {}).get("wheel", 0.0))  # Raw -1.0 to 1.0
                         steering_angle = (steering_input + 1) * 90  # Scale to 0° to 180°
-                        accelerator = inputs.get("pedals", {}).get("accelerator", 0)
-                        brake = inputs.get("pedals", {}).get("brake", 0)
-                        motor_speed = max(0, accelerator) - max(0, brake)
+                        accelerator = float(inputs.get("pedals", {}).get("accelerator", 0.0))
+                        brake = float(inputs.get("pedals", {}).get("brake", 0.0))
+                        motor_speed = max(0.0, accelerator) - max(0.0, brake)
 
                         # Publish to ROS2 topics
                         self.steering_pub.publish(Float32(data=steering_angle))
@@ -62,8 +62,8 @@ class SocketROS2Bridge(Node):
                             f"Published: steering_angle={steering_angle}, motor_speed={motor_speed}, "
                             f"accelerator={accelerator}, brake={brake}"
                         )
-                    except json.JSONDecodeError:
-                        self.get_logger().error("Received invalid JSON message")
+                    except (json.JSONDecodeError, ValueError) as e:
+                        self.get_logger().error(f"Invalid message or data: {e}")
         except Exception as e:
             self.get_logger().error(f"Error with client {addr}: {e}")
         finally:
