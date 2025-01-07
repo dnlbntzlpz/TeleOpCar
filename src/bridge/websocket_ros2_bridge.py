@@ -1,54 +1,69 @@
-import asyncio
-import websockets
+import socket
+import json
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
-from dotenv import load_dotenv
-import os
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Get port from environment variables
-WEBSOCKET_PORT = int(os.getenv("WEBSOCKET_PORT", 8765))  # Default to 8765
-
-class WebSocketROS2Bridge(Node):
+class SocketROS2Bridge(Node):
     def __init__(self):
-        super().__init__('websocket_ros2_bridge')
+        super().__init__('socket_ros2_bridge')
 
         # ROS2 publishers
         self.steering_pub = self.create_publisher(Float32, '/servo_command', 10)
         self.motor_pub = self.create_publisher(Float32, '/motor_command', 10)
 
-    async def handle_connection(self, websocket, path):
-        self.get_logger().info("WebSocket client connected")
+        # Server configuration
+        self.HOST = "0.0.0.0"  # Listen on all network interfaces
+        self.PORT = 8765       # Port for the TCP server
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind((self.HOST, self.PORT))
+        self.server_socket.listen(1)  # Allow 1 client to connect
+
+        self.get_logger().info(f"Server started on {self.HOST}:{self.PORT}, waiting for a connection...")
+
+    def handle_connection(self):
         try:
-            async for message in websocket:
-                data = json.loads(message)
+            conn, addr = self.server_socket.accept()  # Accept incoming connection
+            self.get_logger().info(f"Connected by {addr}")
+            with conn:
+                while rclpy.ok():
+                    data = conn.recv(1024)  # Receive up to 1024 bytes
+                    if not data:
+                        break
+                    message = data.decode()
+                    self.get_logger().info(f"Received: {message}")
 
-                # Publish steering and motor commands
-                if 'steering_angle' in data:
-                    self.steering_pub.publish(Float32(data=data['steering_angle']))
-                if 'motor_speed' in data:
-                    self.motor_pub.publish(Float32(data=data['motor_speed']))
+                    try:
+                        # Parse JSON data
+                        inputs = json.loads(message)
 
-                self.get_logger().info(f"Received: {data}")
-        except websockets.ConnectionClosed:
-            self.get_logger().info("WebSocket client disconnected")
+                        # Extract steering angle and motor speed
+                        steering_angle = inputs.get("pedals", {}).get("wheel", 0) * 90  # Scale to -90° to 90°
+                        accelerator = inputs.get("pedals", {}).get("accelerator", 0)
+                        brake = inputs.get("pedals", {}).get("brake", 0)
+                        motor_speed = max(0, accelerator) - max(0, brake)
 
+                        # Publish to ROS2 topics
+                        self.steering_pub.publish(Float32(data=steering_angle))
+                        self.motor_pub.publish(Float32(data=motor_speed))
 
-    async def run_server(self):
-        server = await websockets.serve(self.handle_connection, '0.0.0.0', WEBSOCKET_PORT)
-        self.get_logger().info(f"WebSocket server started on port {WEBSOCKET_PORT}")
-        await server.wait_closed()
+                        self.get_logger().info(f"Published: steering_angle={steering_angle}, motor_speed={motor_speed}")
+                    except json.JSONDecodeError:
+                        self.get_logger().error("Received invalid JSON message")
+        except Exception as e:
+            self.get_logger().error(f"Server error: {e}")
+        finally:
+            self.get_logger().info("Connection closed")
+            self.server_socket.close()
+
+    def run(self):
+        self.handle_connection()
 
 def main(args=None):
     rclpy.init(args=args)
-    node = WebSocketROS2Bridge()
-
-    loop = asyncio.get_event_loop()
+    node = SocketROS2Bridge()
     try:
-        loop.run_until_complete(node.run_server())
+        node.run()
     except KeyboardInterrupt:
         pass
     finally:
