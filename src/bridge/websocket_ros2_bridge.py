@@ -24,7 +24,6 @@ class WebSocketROS2Bridge(Node):
         self.get_logger().info("WebSocket client connected")
         try:
             async for message in websocket:
-                # Parse JSON message from the client
                 data = json.loads(message)
 
                 # Publish steering and motor commands
@@ -36,6 +35,7 @@ class WebSocketROS2Bridge(Node):
                 self.get_logger().info(f"Received: {data}")
         except websockets.ConnectionClosed:
             self.get_logger().info("WebSocket client disconnected")
+
 
     async def run_server(self):
         server = await websockets.serve(self.handle_connection, '0.0.0.0', WEBSOCKET_PORT)
