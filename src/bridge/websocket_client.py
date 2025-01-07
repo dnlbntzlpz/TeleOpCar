@@ -24,13 +24,12 @@ joystick.init()
 print(f"Using joystick: {joystick.get_name()}")
 
 def get_racing_wheel_input():
-    pygame.event.pump()  # Process event queue to get updated input states
-    pedals_and_wheel = {
-        "wheel": joystick.get_axis(0),          # Steering wheel (-1.0 to 1.0)
-        "accelerator": (joystick.get_axis(1) + 1) / 2,  # Normalize to 0.0 to 1.0
-        "brake": (joystick.get_axis(2) + 1) / 2,        # Normalize to 0.0 to 1.0
-    }
-    return {"pedals": pedals_and_wheel}
+    # Poll joystick axes directly to avoid event queue dependence
+    wheel = joystick.get_axis(0)  # Steering wheel (-1.0 to 1.0)
+    accelerator = (joystick.get_axis(1) + 1) / 2  # Normalize to 0.0 to 1.0
+    brake = (joystick.get_axis(2) + 1) / 2        # Normalize to 0.0 to 1.0
+
+    return {"pedals": {"wheel": wheel, "accelerator": accelerator, "brake": brake}}
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -40,11 +39,17 @@ try:
     print("Connected to the server.")
 
     while True:
+        # Poll joystick inputs directly
         inputs = get_racing_wheel_input()
+
+        # Serialize inputs to JSON and send to the server
         message = json.dumps(inputs)
         client_socket.sendall(message.encode())
         print(f"Sent: {message}")
-        time.sleep(1)
+
+        # Send updates every 50 ms (20 Hz)
+        time.sleep(0.05)
+
 except KeyboardInterrupt:
     print("\nExiting program.")
 finally:
