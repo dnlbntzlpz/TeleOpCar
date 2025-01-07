@@ -24,16 +24,25 @@ joystick.init()
 print(f"Using joystick: {joystick.get_name()}")
 
 def get_racing_wheel_input():
+    # Default values when the controller is idle
+    wheel, accelerator, brake = 0.0, 1.0, 1.0
+
     pygame.event.pump()  # Process event queue to get updated input states
 
-    # Ensure all axis values are explicitly cast to float
+    # Force polling of all axes
     try:
-        wheel = float(joystick.get_axis(0)) if joystick.get_axis(0) is not None else 0.0
-        accelerator = float(joystick.get_axis(1)) if joystick.get_axis(1) is not None else 0.0
-        brake = float(joystick.get_axis(2)) if joystick.get_axis(2) is not None else 0.0
+        axis_wheel = joystick.get_axis(0)
+        axis_accelerator = joystick.get_axis(1)
+        axis_brake = joystick.get_axis(2)
+
+        # If the joystick is reporting default "0.0" for all axes, retain the manually set defaults
+        if axis_wheel != 0.0 or axis_accelerator != 0.0 or axis_brake != 0.0:
+            wheel = float(axis_wheel)
+            accelerator = float(axis_accelerator)
+            brake = float(axis_brake)
     except Exception as e:
         print(f"Error reading joystick inputs: {e}")
-        wheel, accelerator, brake = 0.0, 0.0, 0.0  # Default values
+        # Keep default values in case of error
 
     return {"pedals": {"wheel": wheel, "accelerator": accelerator, "brake": brake}}
 
@@ -45,7 +54,7 @@ try:
     print("Connected to the server.")
 
     while True:
-        # Get inputs with explicit float casting
+        # Get inputs with enforced default values
         inputs = get_racing_wheel_input()
 
         # Serialize inputs to JSON and send to the server
