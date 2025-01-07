@@ -44,7 +44,7 @@ try:
         message = json.dumps(inputs)
         client_socket.sendall(message.encode())
         print(f"Sent: {message}")
-        time.sleep(0.05)  # 20 Hz update rate
+        time.sleep(1)
 except KeyboardInterrupt:
     print("\nExiting program.")
 finally:
