@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from gpiozero import PWMOutputDevice, OutputDevice
-from std_msgs.msg import String  # Import the String message type
+from std_msgs.msg import Float32
+
 
 class MotorControlNode(Node):
     def __init__(self):
@@ -28,49 +29,40 @@ class MotorControlNode(Node):
         self.right_pwm = PWMOutputDevice(right_pwm_pin)
         self.right_dir = OutputDevice(right_dir_pin)
 
-        # Subscriber to control motor speed and direction
-        self.subscription = self.create_subscription(
-            String,
-            'motor_command',
-            self.motor_command_callback,
-            10
-        )
+        # Internal states
+        self.accelerator = 0.0  # Accelerator value
+        self.brake = 0.0        # Brake value
+
+        # Subscribers for accelerator and brake
+        self.create_subscription(Float32, '/accelerator_command', self.accelerator_callback, 10)
+        self.create_subscription(Float32, '/brake_command', self.brake_callback, 10)
 
         self.get_logger().info("Motor Control Node Initialized")
 
-    def motor_command_callback(self, msg):
-        try:
-            command = msg.data.split()  # Expecting format: "left_speed right_speed left_direction right_direction"
-            left_speed = float(command[0])  # Speed for Left Motor (0.0 to 1.0)
-            right_speed = float(command[1])  # Speed for Right Motor (0.0 to 1.0)
-            left_direction = command[2].lower()  # Direction for Left Motor: "forward" or "reverse"
-            right_direction = command[3].lower()  # Direction for Right Motor: "forward" or "reverse"
+    def accelerator_callback(self, msg):
+        """Callback for accelerator input."""
+        self.accelerator = msg.data
+        self.update_motor_speed()
 
-            # Control Left Motor
-            if left_direction == 'forward':
-                self.left_pwm.value = left_speed
-                self.left_dir.off()
-            elif left_direction == 'reverse':
-                self.left_pwm.value = left_speed
-                self.left_dir.on()
-            else:
-                self.left_pwm.off()
-                self.left_dir.off()
+    def brake_callback(self, msg):
+        """Callback for brake input."""
+        self.brake = msg.data
+        self.update_motor_speed()
 
-            # Control Right Motor
-            if right_direction == 'forward':
-                self.right_pwm.value = right_speed
-                self.right_dir.off()
-            elif right_direction == 'reverse':
-                self.right_pwm.value = right_speed
-                self.right_dir.on()
-            else:
-                self.right_pwm.off()
-                self.right_dir.off()
+    def update_motor_speed(self):
+        """Updates motor speed and direction based on accelerator and brake."""
+        # Calculate motor speed
+        speed = max(0.0, self.accelerator - self.brake)
 
-            self.get_logger().info(f"Left Motor: {left_direction} at speed {left_speed}, Right Motor: {right_direction} at speed {right_speed}")
-        except Exception as e:
-            self.get_logger().error(f"Invalid command: {msg.data} | Error: {str(e)}")
+        # Set left motor (forward direction)
+        self.left_pwm.value = speed
+        self.left_dir.off()  # Forward direction for simplicity
+
+        # Set right motor (forward direction)
+        self.right_pwm.value = speed
+        self.right_dir.off()  # Forward direction for simplicity
+
+        self.get_logger().info(f"Motors set to speed: {speed}")
 
     def destroy_node(self):
         # Cleanup GPIO pins
