@@ -39,14 +39,20 @@ class MotorControlNode(Node):
 
         self.get_logger().info("Motor Control Node Initialized")
 
+    def normalize_pedal_value(self, value):
+        """
+        Normalize pedal input from the race wheel range (1 to -1) to the PWM range (0 to 1).
+        """
+        return (1 - value) / 2  # Maps 1 (idle) to 0 and -1 (pressed) to 1
+
     def accelerator_callback(self, msg):
         """Callback for accelerator input."""
-        self.accelerator = msg.data
+        self.accelerator = self.normalize_pedal_value(msg.data)
         self.update_motor_speed()
 
     def brake_callback(self, msg):
         """Callback for brake input."""
-        self.brake = msg.data
+        self.brake = self.normalize_pedal_value(msg.data)
         self.update_motor_speed()
 
     def update_motor_speed(self):
