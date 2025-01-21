@@ -3,7 +3,6 @@ from rclpy.node import Node
 from gpiozero import PWMOutputDevice, OutputDevice
 from std_msgs.msg import Float32
 
-
 class MotorControlNode(Node):
     def __init__(self):
         super().__init__('motor_control_node')
@@ -31,7 +30,7 @@ class MotorControlNode(Node):
 
         # Internal states
         self.accelerator = 0.0  # Accelerator value
-        self.brake = 0.0        # Brake value
+        self.brake = 0.0        # Brake value (from obstacle detection)
 
         # Subscribers for accelerator and brake
         self.create_subscription(Float32, '/accelerator_command', self.accelerator_callback, 10)
@@ -51,24 +50,30 @@ class MotorControlNode(Node):
         self.update_motor_speed()
 
     def brake_callback(self, msg):
-        """Callback for brake input."""
-        self.brake = self.normalize_pedal_value(msg.data)
+        """Callback for brake input from obstacle detection."""
+        self.brake = msg.data
         self.update_motor_speed()
 
     def update_motor_speed(self):
         """Updates motor speed and direction based on accelerator and brake."""
-        # Calculate motor speed
-        speed = max(0.0, self.accelerator - self.brake)
+        if self.brake >= 1.0:
+            # Full brake, stop motors
+            self.left_pwm.value = 0.0
+            self.right_pwm.value = 0.0
+            self.get_logger().info("Brake activated: Motors stopped.")
+        else:
+            # Calculate motor speed from accelerator input
+            speed = max(0.0, self.accelerator)
 
-        # Set left motor (forward direction)
-        self.left_pwm.value = speed
-        self.left_dir.off()  # Forward direction for simplicity
+            # Set left motor (forward direction)
+            self.left_pwm.value = speed
+            self.left_dir.off()  # Forward direction for simplicity
 
-        # Set right motor (forward direction)
-        self.right_pwm.value = speed
-        self.right_dir.off()  # Forward direction for simplicity
+            # Set right motor (forward direction)
+            self.right_pwm.value = speed
+            self.right_dir.off()  # Forward direction for simplicity
 
-        self.get_logger().info(f"Motors set to speed: {speed}")
+            self.get_logger().info(f"Motors set to speed: {speed}")
 
     def destroy_node(self):
         # Cleanup GPIO pins
