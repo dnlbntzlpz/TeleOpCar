@@ -30,7 +30,7 @@ class MotorControlNode(Node):
 
         # Internal states
         self.accelerator = 0.0  # Accelerator value
-        self.brake = 0.0        # Brake value (from obstacle detection)
+        self.brake = 0.0        # Brake value
 
         # Subscribers for accelerator and brake
         self.create_subscription(Float32, '/accelerator_command', self.accelerator_callback, 10)
