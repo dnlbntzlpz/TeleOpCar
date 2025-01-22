@@ -31,7 +31,7 @@ class BrakeManagerNode(Node):
 
     def update_final_brake(self):
         """Publish the final brake command based on inputs."""
-        final_brake = max(self.websocket_brake, self.obstacle_brake)
+        final_brake = min(self.websocket_brake, self.obstacle_brake)
         self.final_brake_publisher.publish(Float32(data=final_brake))
         self.get_logger().info(f"Final Brake Command: {final_brake}")
 
