@@ -45,7 +45,9 @@ class ObstacleDetectionNode(Node):
 
             # Obstacle detection logic (maybe it should be or instead of and)
             if left_distance < self.obstacle_threshold and right_distance < self.obstacle_threshold:
-                brake_value = 1.0  # Full brake
+                brake_value = 0.0  # Full brake
+            else:
+                brake_value = 1.0
 
             # Publish commands
             self.brake_publisher.publish(Float32(data=brake_value))

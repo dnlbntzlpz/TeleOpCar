@@ -56,7 +56,7 @@ class MotorControlNode(Node):
 
     def update_motor_speed(self):
         """Updates motor speed and direction based on accelerator and brake."""
-        if self.brake >= 1.0:
+        if self.brake <= 0.5:
             # Full brake, stop motors
             self.left_pwm.value = 0.0
             self.right_pwm.value = 0.0
