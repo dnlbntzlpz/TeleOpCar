@@ -34,7 +34,7 @@ class MotorControlNode(Node):
 
         # Subscribers for accelerator and brake
         self.create_subscription(Float32, '/accelerator_command', self.accelerator_callback, 10)
-        self.create_subscription(Float32, '/brake_command', self.brake_callback, 10)
+        self.create_subscription(Float32, '/final_brake_command', self.brake_callback, 10)
 
         self.get_logger().info("Motor Control Node Initialized")
 

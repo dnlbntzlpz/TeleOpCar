@@ -17,7 +17,7 @@ class SocketROS2Bridge(Node):
         self.steering_pub = self.create_publisher(Float32, '/servo_command', 10)
         self.motor_pub = self.create_publisher(Float32, '/motor_command', 10)
         self.accelerator_pub = self.create_publisher(Float32, '/accelerator_command', 10)
-        self.brake_pub = self.create_publisher(Float32, '/brake_command', 10)
+        self.brake_pub = self.create_publisher(Float32, '/brake_command_ws', 10)
 
         # Server configuration from environment variables
         self.HOST = os.getenv("HOST", "0.0.0.0")  # Default to listen on all network interfaces

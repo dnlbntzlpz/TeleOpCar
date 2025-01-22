@@ -27,7 +27,7 @@ class ObstacleDetectionNode(Node):
         self.right_sensor = DistanceSensor(echo=right_echo, trigger=right_trigger, max_distance=2.0)
 
         # Publishers for control commands
-        self.brake_publisher = self.create_publisher(Float32, '/brake_command', 10)
+        self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 10)
 
         # Timer to periodically read distances
         self.timer = self.create_timer(0.1, self.check_obstacles)  # 10 Hz
