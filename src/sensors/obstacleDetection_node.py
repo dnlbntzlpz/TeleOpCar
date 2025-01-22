@@ -28,6 +28,8 @@ class ObstacleDetectionNode(Node):
 
         # Publishers for control commands
         self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 10)
+        self.left_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_left', 10)
+        self.right_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_right', 10)
 
         # Timer to periodically read distances
         self.timer = self.create_timer(0.1, self.check_obstacles)  # 10 Hz
@@ -44,10 +46,14 @@ class ObstacleDetectionNode(Node):
             brake_value = 0.0  # No brake by default
 
             # Obstacle detection logic (maybe it should be or instead of and)
-            if left_distance < self.obstacle_threshold and right_distance < self.obstacle_threshold:
+            if left_distance < self.obstacle_threshold or right_distance < self.obstacle_threshold:
                 brake_value = 0.0  # Full brake
             else:
                 brake_value = 1.0
+
+            #Publish distances
+            self.left_distance_publisher.publish(Float32(data=left_distance))
+            self.right_distance_publisher.publish(Float32(data=right_distance))
 
             # Publish commands
             self.brake_publisher.publish(Float32(data=brake_value))
