@@ -51,9 +51,9 @@ class ObstacleDetectionNode(Node):
             if left_distance < self.obstacle_threshold and right_distance < self.obstacle_threshold:
                 brake_value = 0.0  # Full brake
             elif left_distance < self.obstacle_threshold:
-                steering_value = 0.5  # Steer slightly right
+                steering_value = 0.75  # Steer slightly right
             elif right_distance < self.obstacle_threshold:
-                steering_value = -0.5  # Steer slightly left
+                steering_value = -0.75  # Steer slightly left
             else:
                 brake_value = 1.0
 
