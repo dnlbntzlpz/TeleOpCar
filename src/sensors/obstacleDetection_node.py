@@ -30,6 +30,7 @@ class ObstacleDetectionNode(Node):
         self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 10)
         self.left_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_left', 10)
         self.right_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_right', 10)
+        self.steering_publisher = self.create_publisher(Float32, '/steering_command_obs', 10)
 
         # Timer to periodically read distances
         self.timer = self.create_timer(0.1, self.check_obstacles)  # 10 Hz
@@ -42,12 +43,17 @@ class ObstacleDetectionNode(Node):
             left_distance = self.left_sensor.distance  # In meters
             right_distance = self.right_sensor.distance  # In meters
 
-            # Initialize commands
-            brake_value = 0.0  # No brake by default
+            # Initialize commands Obstacle detection logic
+            brake_value = 0.0  # Default: no brake
+            steering_value = 0.0  # Centered steering
 
             # Obstacle detection logic (maybe it should be or instead of and)
-            if left_distance < self.obstacle_threshold or right_distance < self.obstacle_threshold:
+            if left_distance < self.obstacle_threshold and right_distance < self.obstacle_threshold:
                 brake_value = 0.0  # Full brake
+            elif left_distance < self.obstacle_threshold:
+                steering_value = 0.5  # Steer slightly right
+            elif right_distance < self.obstacle_threshold:
+                steering_value = -0.5  # Steer slightly left
             else:
                 brake_value = 1.0
 
@@ -55,13 +61,16 @@ class ObstacleDetectionNode(Node):
             self.left_distance_publisher.publish(Float32(data=left_distance))
             self.right_distance_publisher.publish(Float32(data=right_distance))
 
-            # Publish commands
+            # Publish brake command
             self.brake_publisher.publish(Float32(data=brake_value))
+
+            # Publish steering command
+            self.steering_publisher.publish(Float32(data=steering_value))
 
             # Log actions
             self.get_logger().info(
                 f"Distances - Left: {left_distance:.2f}m, Right: {right_distance:.2f}m | "
-                f"Brake: {brake_value}"
+                f"Brake: {brake_value}, Steering: {steering_value}"
             )
         except Exception as e:
             self.get_logger().error(f"Error reading sensors: {str(e)}")

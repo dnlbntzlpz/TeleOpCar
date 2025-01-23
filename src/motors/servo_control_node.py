@@ -15,17 +15,26 @@ class ServoControlNode(Node):
         self.servo = PWMOutputDevice(pwm_pin, frequency=50)  # 50Hz standard for servos
 
         # Subscriber to control the servo angle
-        self.subscription = self.create_subscription(
-            Float32,
-            'servo_command',
-            self.servo_command_callback,
-            10
-        )
+        self.create_subscription(Float32, 'servo_command', self.servo_command_callback, 10)
+        self.create_subscription(Float32, '/steering_command_obs', self.steering_command_callback, 10)
 
         self.get_logger().info("Servo Control Node Initialized")
 
     def servo_command_callback(self, msg):
         angle = msg.data  # Expected angle in degrees (0-180)
+        self.set_servo_angle(angle)
+
+    def steering_command_callback(self, msg):
+        """Callback for assistive steering commands."""
+        steering_value = msg.data  # Steering value from obstacle detection (-1.0 to 1.0)
+
+        # Map steering values (-1.0, 0.0, 1.0) to servo angles (0°, 90°, 180°)
+        if steering_value < -1.0 or steering_value > 1.0:
+            self.get_logger().warn(f"Invalid steering value: {steering_value}. Must be between -1.0 and 1.0.")
+            return
+
+        # Map the steering value to an angle
+        angle = 90.0 + (steering_value * 45.0)  # -1 -> 45°, 0 -> 90°, 1 -> 135°
         self.set_servo_angle(angle)
 
     def set_servo_angle(self, angle):
@@ -42,6 +51,7 @@ class ServoControlNode(Node):
         duty_cycle = pulse_width_us / 20000  # Convert pulse width to duty cycle (20ms period)
 
         self.servo.value = duty_cycle
+        self.current_angle = angle
         self.get_logger().info(f"Set servo to {angle}° (Duty Cycle: {duty_cycle:.4f})")
 
     def destroy_node(self):
