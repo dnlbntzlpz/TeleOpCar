@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>camera</name>
+  <version>0.0.1</version>
+  <description>Camera package for capturing and publishing video frames</description>
+
+  <maintainer email="dnlbntzlpz@gmail.com">Daniel Benitez-Lopez</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>opencv-python</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
