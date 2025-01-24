@@ -14,16 +14,40 @@ class ServoControlNode(Node):
         # Initialize PWM output device for the servo
         self.servo = PWMOutputDevice(pwm_pin, frequency=50)  # 50Hz standard for servos
 
+        # Initialize current steering angle and override state
+        self.current_angle = 90.0 # Start centered at 90
+        self.override_active = False # Flag for obstacle avoidance override
+        self.last_obstavle_angle = 90.0 # Last angle set by obstacle avoidance
+
         # Subscriber to control the servo angle
         self.create_subscription(Float32, 'servo_command', self.servo_command_callback, 10)
-        self.create_subscription(Float32, '/steering_command_obs', self.steering_command_callback, 10)
+        self.create_subscription(Float32, '/steering_command_obs', self.obstacle_command_callback, 10)
 
         self.get_logger().info("Servo Control Node Initialized")
 
     def servo_command_callback(self, msg):
-        angle = msg.data  # Expected angle in degrees (0-180)
-        self.set_servo_angle(angle)
+        if not self.override_active:
+            angle = msg.data  # Expected angle in degrees (0-180)
+            self.set_servo_angle(angle)
+        else:
+            self.get_logger().info("Override active, ignoring controller command")
 
+    def obstacle_command_callback(self, msg):
+        """Callback for steering commands from ovstacle avoidance"""
+        steering_value = msg.data #STeering value from obstacle avoidance (-1.0 to 1.0)
+
+        if steering_value != 0.0: #Obstacle detected
+            self.override_active = True
+            angle = 90.0 + (steering_value * 45.0) # -1 -> 45, 0 -> 90, 1 -> 135
+            self.set_servo_angle(angle)
+            self.get_logger().info(f"Obstacle detected, overriding to angle: {angle}")
+        else:
+            #No obstacle detected, deactivate override
+            if self.override_active:
+                self.get_logger().info("No Obstacle detected, returning control to the contoller.")
+            self.override_active = False
+        
+        
     def steering_command_callback(self, msg):
         """Callback for assistive steering commands."""
         steering_value = msg.data  # Steering value from obstacle detection (-1.0 to 1.0)

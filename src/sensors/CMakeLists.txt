@@ -5,7 +5,6 @@ project(obstacle)
 find_package(ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(gpiozero REQUIRED)
 
 # Install Python scripts
 install(

@@ -9,15 +9,16 @@ find_package(std_msgs REQUIRED)
 # Install Python scripts
 install(
   PROGRAMS
-    src/websocket_client.py
     src/websocket_ros2_bridge.py
+    src/websocket_client.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install .env file
 install(
-  FILES src/.env
-  DESTINATION share/${PROJECT_NAME}
+  DIRECTORY launch/
+  #  FILES src/.env
+  DESTINATION share/${PROJECT_NAME}/launch
 )
 
 ament_package()
