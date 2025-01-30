@@ -1,33 +1,33 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .motor_control import motor_forward, motor_backward, motor_stop, steer_left, steer_right, steer_center
+from .ros_interface import ROS2Interface
+
+ros2_interface = ROS2Interface()
 
 class ControlConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
-        print("WebSocket connection established.")
 
     async def disconnect(self, close_code):
-        print("WebSocket connection closed.")
-        motor_stop()
+        pass
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         action = data.get("action")
-        speed = data.get("speed", 1.0)
+        value = data.get("value", 1.0)
 
         if action == "forward":
-            motor_forward(speed)
+            ros2_interface.publish_accelerator(value)
         elif action == "backward":
-            motor_backward(speed)
+            ros2_interface.publish_accelerator(-value)
         elif action == "stop":
-            motor_stop()
+            ros2_interface.publish_brake(1.0)  # Apply full brake
         elif action == "left":
-            steer_left()
+            ros2_interface.publish_steering(45.0)  # Example angle
         elif action == "right":
-            steer_right()
+            ros2_interface.publish_steering(135.0)  # Example angle
         elif action == "center":
-            steer_center()
+            ros2_interface.publish_steering(90.0)  # Center
 
-        # Send a confirmation back to the frontend
+        # Send a response back to the frontend
         await self.send(text_data=json.dumps({"status": "success", "action": action}))
