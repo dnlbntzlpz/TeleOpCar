@@ -1,0 +1,40 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teleop Car Interface</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <h1>Teleop Car Interface</h1>
+
+    <!-- Video Feed -->
+    <div id="video-container">
+        <h2>Live Video Feed</h2>
+        <video id="videoFeed" autoplay></video>
+    </div>
+
+    <!-- Control Panel -->
+    <div id="control-panel">
+        <h2>Control Panel</h2>
+        <button onclick="sendCommand('left')">Left</button>
+        <button onclick="sendCommand('right')">Right</button>
+        <button onclick="sendCommand('stop')">Stop</button>
+        <button onclick="sendCommand('forward')">Forward</button>
+        <button onclick="sendCommand('backward')">Backward</button>
+    </div>
+
+    <!-- Telemetry -->
+    <div id="telemetry">
+        <h2>Telemetry</h2>
+        <p>Speed: <span id="speed">0</span> km/h</p>
+        <p>Battery: <span id="battery">100</span>%</p>
+        <p>Obstacle Distance: <span id="distance">N/A</span></p>
+    </div>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
