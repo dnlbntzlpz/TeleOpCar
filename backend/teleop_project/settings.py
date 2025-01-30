@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-*kd#jivvt1pi&r)fjw87ul+a2-lk)3(drvx&#t&&se)*mml#j9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "192.168.10.183",  # Add your Raspberry Pi's IP
+]
 
 
 # Application definition
@@ -38,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'teleop',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -116,10 +121,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'teleop/static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Collects static files here for production
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ASGI_APPLICATION = 'teleop_project.asgi.application'
