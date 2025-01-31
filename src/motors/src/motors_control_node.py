@@ -42,7 +42,8 @@ class MotorControlNode(Node):
         """
         Normalize pedal input from the race wheel range (1 to -1) to the PWM range (0 to 1).
         """
-        return (1 - value) / 2  # Maps 1 (idle) to 0 and -1 (pressed) to 1
+        #return (1 - value) / 2  # Maps 1 (idle) to 0 and -1 (pressed) to 1
+        return value  # Keep the range as is (-1 to 1)
 
     def accelerator_callback(self, msg):
         """Callback for accelerator input."""
@@ -54,6 +55,27 @@ class MotorControlNode(Node):
         self.brake = msg.data
         self.update_motor_speed()
 
+    # def update_motor_speed(self):
+    #     """Updates motor speed and direction based on accelerator and brake."""
+    #     if self.brake <= 0.5:
+    #         # Full brake, stop motors
+    #         self.left_pwm.value = 0.0
+    #         self.right_pwm.value = 0.0
+    #         self.get_logger().info("Brake activated: Motors stopped.")
+    #     else:
+    #         # Calculate motor speed from accelerator input
+    #         speed = max(0.0, self.accelerator)
+
+    #         # Set left motor (forward direction)
+    #         self.left_pwm.value = speed
+    #         self.left_dir.off()  # Forward direction for simplicity
+
+    #         # Set right motor (forward direction)
+    #         self.right_pwm.value = speed
+    #         self.right_dir.off()  # Forward direction for simplicity
+
+    #         self.get_logger().info(f"Motors set to speed: {speed}")
+
     def update_motor_speed(self):
         """Updates motor speed and direction based on accelerator and brake."""
         if self.brake <= 0.5:
@@ -62,18 +84,24 @@ class MotorControlNode(Node):
             self.right_pwm.value = 0.0
             self.get_logger().info("Brake activated: Motors stopped.")
         else:
-            # Calculate motor speed from accelerator input
-            speed = max(0.0, self.accelerator)
+            speed = abs(self.accelerator)  # Get absolute speed value
+            is_forward = self.accelerator >= 0  # Determine direction
 
-            # Set left motor (forward direction)
+            # Set motor speed
             self.left_pwm.value = speed
-            self.left_dir.off()  # Forward direction for simplicity
-
-            # Set right motor (forward direction)
             self.right_pwm.value = speed
-            self.right_dir.off()  # Forward direction for simplicity
 
-            self.get_logger().info(f"Motors set to speed: {speed}")
+            # Set motor direction
+            if is_forward:
+                self.left_dir.off()  # Forward
+                self.right_dir.off()
+                direction = "forward"
+            else:
+                self.left_dir.on()  # Reverse
+                self.right_dir.on()
+                direction = "reverse"
+
+            self.get_logger().info(f"Motors set to {direction} at speed: {speed}")
 
     def destroy_node(self):
         # Cleanup GPIO pins

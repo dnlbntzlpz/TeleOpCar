@@ -13,10 +13,10 @@ socket.onclose = () => {
     console.log("WebSocket connection closed.");
 };
 
-function sendCommand(action, speed = 1.0) {
+function sendCommand(action, value = 1.0) {
     if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ action, speed }));
-        console.log("Command sent:", action, speed);
+        socket.send(JSON.stringify({ action: action, value: value }));
+        console.log(`Sent command: ${action}, value: ${value}`);
     } else {
         console.error("WebSocket is not open.");
     }
