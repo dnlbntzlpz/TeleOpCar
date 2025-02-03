@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .ros_interface import ROS2Interface  # Use the existing video stream
+from .ros_interface import ROS2Interface
 import rclpy
 
 # Ensure rclpy is initialized only once
@@ -33,6 +33,21 @@ def send_command(request):
 
     return JsonResponse({"status": "success", "command": command})
 
+# RaceWheel stuff
+# New function specifically for controller input
+def send_controller_command(request):
+    command = request.GET.get('command', '')
+    value = float(request.GET.get('value', 1.0))
+
+    if command == "accelerator":
+        ros2_interface.publish_accelerator(value)
+    elif command == "brake":
+        ros2_interface.publish_brake(value)
+    elif command == "steering":
+        ros2_interface.publish_steering(value)
+
+    return JsonResponse({"status": "success", "command": command, "value": value})
+
 # Video Stuff
 import cv2
 import time
@@ -41,10 +56,6 @@ from django.http import StreamingHttpResponse
 # Global camera instances
 camera_1 = cv2.VideoCapture(0, cv2.CAP_V4L2)  # /dev/video0
 camera_2 = cv2.VideoCapture(2, cv2.CAP_V4L2)  # /dev/video2
-
-def index(request):
-    """Render the main page."""
-    return render(request, 'teleop/index.html')
 
 def generate_frames(camera, frame_rate=10):
     """Yields frames from the given camera as an MJPEG stream."""
