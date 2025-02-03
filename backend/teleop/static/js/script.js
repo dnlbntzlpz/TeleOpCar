@@ -1,23 +1,20 @@
-const socket = new WebSocket('ws://192.168.10.183:8000/ws/control/');
-
-socket.onopen = () => {
-    console.log("WebSocket connection established.");
-};
-
-socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log("Received from server:", data);
-};
-
-socket.onclose = () => {
-    console.log("WebSocket connection closed.");
-};
-
+// Function to send ROS 2 commands using HTTP requests
 function sendCommand(action, value = 1.0) {
-    if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ action: action, value: value }));
-        console.log(`Sent command: ${action}, value: ${value}`);
-    } else {
-        console.error("WebSocket is not open.");
-    }
+    fetch(`/send_command/?command=${action}&value=${value}`)
+        .then(response => response.json())
+        .then(data => console.log(`Command sent: ${data.command}, Status: ${data.status}`))
+        .catch(error => console.error("Error sending command:", error));
 }
+
+// Wait for the DOM to load and then add event listeners
+document.addEventListener("DOMContentLoaded", function () {
+    const buttonIds = ["forward", "backward", "left", "center", "right", "stop"];
+    buttonIds.forEach((id) => {
+        const button = document.getElementById(id);
+        if (button) {
+            button.addEventListener("click", () => sendCommand(id));
+        } else {
+            console.error(`Button with ID '${id}' not found.`);
+        }
+    });
+});
