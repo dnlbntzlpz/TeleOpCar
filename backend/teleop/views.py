@@ -23,6 +23,7 @@ def send_command(request):
         ros2_interface.publish_brake(1.0)
         ros2_interface.publish_accelerator(-0.9)
     elif command == "stop":
+        ros2_interface.publish_accelerator(0.1)
         ros2_interface.publish_brake(0.0)
     elif command == "left":
         ros2_interface.publish_steering(45.0)
