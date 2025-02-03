@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .ros_interface import ROS2Interface
-
+from .ros_interface import ROS2Interface  # Use the existing video stream
 import rclpy
 
 # Ensure rclpy is initialized only once
@@ -34,30 +33,52 @@ def send_command(request):
 
     return JsonResponse({"status": "success", "command": command})
 
-# Video Streaming
+# Video Stuff
 import cv2
+import time
 from django.http import StreamingHttpResponse
 
-def generate_frames(camera_index):
-    """Captures frames from a specified camera index and serves as MJPEG."""
-    camera = cv2.VideoCapture(camera_index)
+# Global camera instances
+camera_1 = cv2.VideoCapture(0, cv2.CAP_V4L2)  # /dev/video0
+camera_2 = cv2.VideoCapture(2, cv2.CAP_V4L2)  # /dev/video2
+
+def index(request):
+    """Render the main page."""
+    return render(request, 'teleop/index.html')
+
+def generate_frames(camera, frame_rate=10):
+    """Yields frames from the given camera as an MJPEG stream."""
+    interval = 1 / frame_rate  # Interval between frames
+
     while True:
+        start_time = time.time()
+
         success, frame = camera.read()
         if not success:
             break
-        else:
-            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    camera.release()
+
+        # Resize to 480p (smaller size = less data to send)
+        frame = cv2.resize(frame, (640, 480))
+
+        # Reduce JPEG quality to 50 (Lower quality = less delay)
+        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        
+        elapsed_time = time.time() - start_time
+        if elapsed_time < interval:
+            time.sleep(interval - elapsed_time)  # Ensure target FPS
 
 def video_feed_1(request):
-    """Handles the first camera video feed."""
-    return StreamingHttpResponse(generate_frames(0),
-                                 content_type='multipart/x-mixed-replace; boundary=frame')
+    """Video feed for Camera 1 (/dev/video0)."""
+    return StreamingHttpResponse(generate_frames(camera_1), content_type='multipart/x-mixed-replace; boundary=frame')
 
 def video_feed_2(request):
-    """Handles the second camera video feed."""
-    return StreamingHttpResponse(generate_frames(2),
-                                 content_type='multipart/x-mixed-replace; boundary=frame')
+    """Video feed for Camera 2 (/dev/video2)."""
+    return StreamingHttpResponse(generate_frames(camera_2), content_type='multipart/x-mixed-replace; boundary=frame')
+
+def cleanup():
+    """Release camera resources on shutdown."""
+    camera_1.release()
+    camera_2.release()
