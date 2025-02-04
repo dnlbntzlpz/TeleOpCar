@@ -4,7 +4,6 @@ from std_msgs.msg import Float32
 
 class ROS2Interface(Node):
     def __init__(self):
-        # Initialize rclpy if it hasn't been initialized
         if not rclpy.ok():
             rclpy.init()
         
