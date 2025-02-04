@@ -52,15 +52,17 @@ function handleGamepadInput() {
 
     // Read steering wheel (axis 0), accelerator (axis 1), brake (axis 2)
     let steering = gp.axes[0];  // Steering wheel: -1 (left), 1 (right)
-    let accelerator = gp.axes[1]; // Accelerator: -1 (pressed), 1 (released)
-    let brake = gp.axes[2];  // Brake: -1 (pressed), 1 (released)
+    let accelerator = gp.axes[2]; // Accelerator: -1 (pressed), 1 (released)
+    let brake = gp.axes[5];  // Brake: 1 (unpressed), -1 (pressed)
 
     // Map steering to the 0-180 range
     let steeringAngle = Math.round(((steering + 1) / 2) * 180); // Convert [-1,1] to [0,180]
 
-    // Normalize accelerator and brake values
+    // Normalize accelerator values (already in range -1 to 1)
     let accelValue = accelerator < 0 ? Math.abs(accelerator) : 0.0; // Convert -1 (full press) to positive range
-    let brakeValue = brake < 0 ? Math.abs(brake) : 0.0;  // Convert -1 (full press) to positive range
+
+    // Normalize brake values (convert from [1, -1] to [0, 1])
+    let brakeValue = brake > 0 ? 0.0 : Math.abs((brake + 1) / 2); // Normalize so 1 (unpressed) -> 0 and -1 (pressed) -> 1
 
     // Send steering command only if it changes
     if (previousSteering !== steeringAngle) {

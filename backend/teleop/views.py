@@ -37,10 +37,15 @@ def send_command(request):
 # New function specifically for controller input
 def send_controller_command(request):
     command = request.GET.get('command', '')
-    value = float(request.GET.get('value', 1.0))
+    value = float(request.GET.get('value', ''))
 
     if command == "accelerator":
-        ros2_interface.publish_accelerator(value)
+        if value <= (.1):
+            ros2_interface.publish_accelerator(0.1)
+            ros2_interface.publish_brake(0.0)
+        else:
+            ros2_interface.publish_brake(1.0)
+            ros2_interface.publish_accelerator(value)
     elif command == "brake":
         ros2_interface.publish_brake(value)
     elif command == "steering":
