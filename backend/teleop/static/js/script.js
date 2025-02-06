@@ -54,6 +54,16 @@ function handleGamepadInput() {
     let steering = gp.axes[0];  // Steering wheel: -1 (left), 1 (right)
     let accelerator = gp.axes[2]; // Accelerator: -1 (pressed), 1 (released)
     let brake = gp.axes[5];  // Brake: 1 (unpressed), -1 (pressed)
+    let carDirection = "forward"; // Default direction is forward
+
+    if (gp.buttons[12] && gp.buttons[12].pressed && carDirection !== "forward") {
+        carDirection = "forward";
+        console.log("Button 12 pressed: Car direction set to FORWARD.");
+    }
+    if (gp.buttons[13] && gp.buttons[13].pressed && carDirection !== "reverse") {
+        carDirection = "reverse";
+        console.log("Button 13 pressed: Car direction set to REVERSE.");
+    }
 
     // Map steering to the 0-180 range
     let steeringAngle = Math.round(((steering + 1) / 2) * 180); // Convert [-1,1] to [0,180]
@@ -71,8 +81,12 @@ function handleGamepadInput() {
     }
 
     // Send accelerator or brake command only if it changes
-    if (accelValue > 0 && previousAccelerator !== accelValue) {
+    if (accelValue > 0 && previousAccelerator !== accelValue && carDirection === "forward") {
         sendControllerCommand("accelerator", accelValue);
+        previousAccelerator = accelValue;
+    } else if(accelValue > 0 && previousAccelerator !== accelValue && carDirection === "reverse") {
+        //sendControllerCommand("brake", 1.0);
+        sendControllerCommand("accelerator", -(accelValue - 0.1));
         previousAccelerator = accelValue;
     } else if (brakeValue > 0 && previousBrake !== brakeValue) {
         sendControllerCommand("brake", brakeValue);
