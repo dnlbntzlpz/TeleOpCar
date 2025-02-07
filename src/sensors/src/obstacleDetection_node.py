@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from gpiozero import DistanceSensor
+import lgpio
+import time
 from std_msgs.msg import Float32
 
 class ObstacleDetectionNode(Node):
@@ -13,18 +14,21 @@ class ObstacleDetectionNode(Node):
         self.declare_parameter('right_trigger_pin', 22)
         self.declare_parameter('right_echo_pin', 24)
 
-        left_trigger = self.get_parameter('left_trigger_pin').value
-        left_echo = self.get_parameter('left_echo_pin').value
-        right_trigger = self.get_parameter('right_trigger_pin').value
-        right_echo = self.get_parameter('right_echo_pin').value
+        self.left_trigger = self.get_parameter('left_trigger_pin').value
+        self.left_echo = self.get_parameter('left_echo_pin').value
+        self.right_trigger = self.get_parameter('right_trigger_pin').value
+        self.right_echo = self.get_parameter('right_echo_pin').value
 
         # Declare detection threshold parameters
         self.declare_parameter('obstacle_threshold', 0.3)  # 30 cm
         self.obstacle_threshold = self.get_parameter('obstacle_threshold').value
 
-        # Initialize sensors
-        self.left_sensor = DistanceSensor(echo=left_echo, trigger=left_trigger, max_distance=2.0)
-        self.right_sensor = DistanceSensor(echo=right_echo, trigger=right_trigger, max_distance=2.0)
+        # Initialize GPIO
+        self.chip = lgpio.gpiochip_open(0)
+        lgpio.gpio_claim_output(self.chip, self.left_trigger)
+        lgpio.gpio_claim_input(self.chip, self.left_echo)
+        lgpio.gpio_claim_output(self.chip, self.right_trigger)
+        lgpio.gpio_claim_input(self.chip, self.right_echo)
 
         # Publishers for control commands
         self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 10)
@@ -37,11 +41,30 @@ class ObstacleDetectionNode(Node):
 
         self.get_logger().info("Obstacle Detection Node Initialized")
 
+    def get_distance(self, trigger, echo):
+        """Measures distance using an ultrasonic sensor"""
+        lgpio.gpio_write(self.chip, trigger, 1)
+        time.sleep(0.00001)
+        lgpio.gpio_write(self.chip, trigger, 0)
+
+        start_time = time.time()
+        stop_time = time.time()
+
+        while lgpio.gpio_read(self.chip, echo) == 0:
+            start_time = time.time()
+
+        while lgpio.gpio_read(self.chip, echo) == 1:
+            stop_time = time.time()
+
+        elapsed_time = stop_time - start_time
+        distance = (elapsed_time * 34300) / 2  # Convert to cm
+        return distance / 100.0  # Convert to meters
+
     def check_obstacles(self):
         try:
             # Read distances
-            left_distance = self.left_sensor.distance  # In meters
-            right_distance = self.right_sensor.distance  # In meters
+            left_distance = self.get_distance(self.left_trigger, self.left_echo)
+            right_distance = self.get_distance(self.right_trigger, self.right_echo)
 
             # Initialize commands Obstacle detection logic
             brake_value = 0.0  # Default: no brake
@@ -57,7 +80,7 @@ class ObstacleDetectionNode(Node):
             else:
                 brake_value = 1.0
 
-            #Publish distances
+            # Publish distances
             self.left_distance_publisher.publish(Float32(data=left_distance))
             self.right_distance_publisher.publish(Float32(data=right_distance))
 
@@ -77,8 +100,7 @@ class ObstacleDetectionNode(Node):
 
     def destroy_node(self):
         # Cleanup resources
-        self.left_sensor.close()
-        self.right_sensor.close()
+        lgpio.gpiochip_close(self.chip)
         super().destroy_node()
 
 
