@@ -17,7 +17,7 @@ def send_command(request):
 
     if command == "forward":
         ros2_interface.publish_brake(1.0)
-        ros2_interface.publish_accelerator(0.5)
+        ros2_interface.publish_accelerator(1.0)
     elif command == "backward":
         ros2_interface.publish_brake(1.0)
         ros2_interface.publish_accelerator(-0.9)
@@ -60,31 +60,38 @@ from django.http import StreamingHttpResponse
 
 # Global camera instances
 camera_1 = cv2.VideoCapture(0, cv2.CAP_V4L2)  # /dev/video0
-camera_2 = cv2.VideoCapture(1, cv2.CAP_V4L2)  # /dev/video2 maybe its 1 now?
+camera_1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # Force MJPEG
+camera_1.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffering
+
+camera_2 = cv2.VideoCapture(2, cv2.CAP_V4L2)  # /dev/video2
+camera_2.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # Force MJPEG
+camera_2.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffering
 
 def generate_frames(camera, frame_rate=10):
     """Yields frames from the given camera as an MJPEG stream."""
-    interval = 1 / frame_rate  # Interval between frames
-
+    interval = 1 / frame_rate
     while True:
         start_time = time.time()
 
-        success, frame = camera.read()
-        if not success:
+        if not camera.isOpened():
+            print("Error: Camera not opened.")
             break
 
-        # Resize to 480p (smaller size = less data to send)
-        frame = cv2.resize(frame, (640, 480))
+        success, frame = camera.read()
+        if not success:
+            print("Error: Failed to capture frame.")
+            time.sleep(interval)  # Wait before retrying
+            continue
 
-        # Reduce JPEG quality to 50 (Lower quality = less delay)
+        frame = cv2.resize(frame, (640, 480))
         _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-        
+
         elapsed_time = time.time() - start_time
         if elapsed_time < interval:
-            time.sleep(interval - elapsed_time)  # Ensure target FPS
+            time.sleep(interval - elapsed_time)
 
 def video_feed_1(request):
     """Video feed for Camera 1 (/dev/video0)."""
