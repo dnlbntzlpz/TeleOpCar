@@ -17,7 +17,7 @@ def send_command(request):
 
     if command == "forward":
         ros2_interface.publish_brake(1.0)
-        ros2_interface.publish_accelerator(1.0)
+        ros2_interface.publish_accelerator(0.5)
     elif command == "backward":
         ros2_interface.publish_brake(1.0)
         ros2_interface.publish_accelerator(-0.9)
@@ -40,7 +40,7 @@ def send_controller_command(request):
     value = float(request.GET.get('value', ''))
 
     if command == "accelerator":
-        if value >= 0 and value <= (.1):
+        if value >= 0 and (abs(value) <= (.1)):
             ros2_interface.publish_accelerator(0.1)
             ros2_interface.publish_brake(0.0)
         else:
@@ -60,7 +60,7 @@ from django.http import StreamingHttpResponse
 
 # Global camera instances
 camera_1 = cv2.VideoCapture(0, cv2.CAP_V4L2)  # /dev/video0
-camera_2 = cv2.VideoCapture(2, cv2.CAP_V4L2)  # /dev/video2
+camera_2 = cv2.VideoCapture(1, cv2.CAP_V4L2)  # /dev/video2 maybe its 1 now?
 
 def generate_frames(camera, frame_rate=10):
     """Yields frames from the given camera as an MJPEG stream."""
