@@ -105,3 +105,21 @@ def cleanup():
     """Release camera resources on shutdown."""
     camera_1.release()
     camera_2.release()
+
+# Telemetry Stuff
+import random
+from django.http import JsonResponse
+
+def get_mock_telemetry(request):
+    """Returns random but reasonable telemetry values for testing."""
+    telemetry_data = {
+        "temperature": round(random.uniform(30, 80), 1),  # 30-80°C
+        "battery": random.randint(50, 100),  # 50-100%
+        "latency": random.randint(50, 200),  # 50-200ms
+        "fps": random.randint(5, 30),  # 5-30 FPS
+        "connection": "Connected",
+        "signal": random.randint(50, 100),  # 50-100%
+        "gamepad": "Connected" if random.random() > 0.3 else "No Gamepad Detected",  # 70% chance of being connected
+        "cpu_load": round(random.uniform(10, 80), 1),  # 10-80% CPU load
+    }
+    return JsonResponse(telemetry_data)

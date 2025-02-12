@@ -9,41 +9,107 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <h1>Teleop Car Interface</h1>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Teleop Car Interface</h1>
+        </header>
 
-    <!-- Video Feed -->
-    <div id="video-container">
-        <h2>Live Video Feeds</h2>
-        <div style="display: flex; gap: 20px;">
-            <div>
-                <h3>Camera 1</h3>
-                <img src="/video_feed_1/" width="640" height="480">
+        <!-- Video Feeds -->
+        <div class="video-feeds">
+            <div class="video-feed">
+                <h3 class="camera-title">Front Camera</h3>
+                <img id="videoFeed1" src="/video_feed_1/" width="640" height="480" alt="Primary Video Stream">
+                <p class="video-label">Primary Camera</p>
             </div>
-            <div>
-                <h3>Camera 2</h3>
-                <img src="/video_feed_2/" width="640" height="480">
+            <div class="video-feed">
+                <h3 class="camera-title">Rear Camera</h3>
+                <img id="videoFeed2" src="/video_feed_2/" width="640" height="480" alt="Secondary Video Stream">
+                <p class="video-label">Secondary Camera</p>
             </div>
         </div>
-    </div>
 
-    <!-- Control Panel -->
-    <div id="control-panel">
-        <h2>Control Panel</h2>
-        <button id="forward">Forward</button>
-        <button id="backward">Backward</button>
-        <button id="left">Left</button>
-        <button id="center">Center</button>
-        <button id="right">Right</button>
-        <button id="stop">Stop</button>
-    </div>
-    
+        <!-- Keyboard Controls Section -->
+        <div class="keyboard-controls-container">
+            <!-- Keyboard Layout -->
+            <div class="keyboard-controls">
+                <h3>Keyboard</h3>
+                <div class="keyboard-grid">
+                    <div class="key-row"><div class="key" id="keyW" data-command="forward">W</div></div>
+                    <div class="key-row">
+                        <div class="key" id="keyA" data-command="left">A</div>
+                        <div class="key" id="keyS" data-command="backward">S</div>
+                        <div class="key" id="keyD" data-command="right">D</div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Telemetry -->
-    <div id="telemetry">
-        <h2>Telemetry</h2>
-        <p>Speed: <span id="speed">0</span> km/h</p>
-        <p>Battery: <span id="battery">100</span>%</p>
-        <p>Obstacle Distance: <span id="distance">N/A</span></p>
+            <!-- Keyboard Control List -->
+            <div class="control-list">
+                <h3>Keyboard Controls</h3>
+                <ul>
+                    <li><strong>W</strong>: Move Forward</li>
+                    <li><strong>S</strong>: Move Backward</li>
+                    <li><strong>A</strong>: Move Left</li>
+                    <li><strong>D</strong>: Move Right</li>
+                    <li><strong>X</strong>: Stop</li>
+                    <li><strong>C</strong>: Center Steering</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Command History -->
+        <div class="command-history">
+            <h3>Command History</h3>
+            <ul id="commandHistoryList"></ul>
+        </div>
+
+        <!-- Status Dashboard -->
+        <div class="status-dashboard">
+            <h4>Sensors & Status</h4>
+            <div class="status-row">
+                <div class="status-item">
+                    <span class="status-icon">🔥</span>
+                    <span class="status-label">Temp</span>
+                    <span class="status-value" id="status-temperature">--°C</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">🔋</span>
+                    <span class="status-label">Battery</span>
+                    <span class="status-value" id="status-battery">--%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">⏱️</span>
+                    <span class="status-label">Latency</span>
+                    <span class="status-value" id="status-latency">--ms</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">🎥</span>
+                    <span class="status-label">FPS</span>
+                    <span class="status-value" id="status-fps">--</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">📶</span>
+                    <span class="status-label">Connection</span>
+                    <span class="status-value" id="status-connection">WiFi</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">📊</span>
+                    <span class="status-label">Signal</span>
+                    <span class="status-value" id="status-signal">85%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">🎮</span>
+                    <span class="status-label">Gamepad</span>
+                    <span class="status-value" id="status-controller">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon">🔄</span>
+                    <span class="status-label">CPU Load</span>
+                    <span class="status-value" id="status-cpu">0%</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="{% static 'js/script.js' %}"></script>
