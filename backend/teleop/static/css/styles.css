@@ -126,6 +126,26 @@ h1 {
     transform: translateY(1px);
 }
 
+/* Keyboard Controls List */
+.keyboard-instructions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.keyboard-instructions ul li {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    margin: 5px 0;
+}
+
+.keyboard-instructions ul li strong {
+    width: 30px;
+    text-align: right;
+    margin-right: 10px;
+}
+
 /* Steering & Pedals */
 .wheel-and-pedals-container {
     flex: 1.5;
@@ -261,9 +281,32 @@ h1 {
 }
 
 /* Command History */
-.command-history-container {
-    min-width: 300px;
-    align-self: flex-start;
+#command-history-box {
+    width: 100%;
+    height: 150px; /* Adjust height as needed */
+    overflow-y: auto; /* Enables scrolling */
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#command-history {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+#command-history li {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Last item should not have a bottom border */
+#command-history li:last-child {
+    border-bottom: none;
 }
 
 /* Responsive Adjustments */

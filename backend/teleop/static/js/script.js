@@ -1,23 +1,61 @@
-// Function to send ROS 2 commands using HTTP requests
+// 1. Command Handling
 function sendCommand(action, value = 1.0) {
     fetch(`/send_command/?command=${action}&value=${value}`)
         .then(response => response.json())
-        .then(data => console.log(`Command sent: ${data.command}, Status: ${data.status}`))
+        .then(data => {
+            console.log(`Command sent: ${data.command}, Status: ${data.status}`);
+            addCommandToHistory(`Command: ${data.command}, Value: ${value}`);
+        })
         .catch(error => console.error("Error sending command:", error));
 }
 
-// Example: Hooking buttons to the sendCommand function
-document.addEventListener("DOMContentLoaded", function() {
-    // Select all keys that have a "data-command" attribute
-    document.querySelectorAll(".key").forEach(key => {
-        key.addEventListener("click", () => {
-            const command = key.getAttribute("data-command");
-            sendCommand(command);
-        });
-    });
+function sendControllerCommand(command, value = 1.0) {
+    fetch(`/send_controller_command/?command=${command}&value=${value}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Controller Command sent: ${data.command}, Value: ${data.value}`);
+            addCommandToHistory(`Controller: ${data.command}, Value: ${value}`);
+        })
+        .catch(error => console.error("Error sending controller command:", error));
+}
+
+function addCommandToHistory(commandText) {
+    const historyBox = document.getElementById("command-history");
+    const newCommand = document.createElement("li");
+    newCommand.textContent = commandText;
+    historyBox.appendChild(newCommand);
+    
+    // Auto-scroll to the latest command
+    const container = document.getElementById("command-history-box");
+    container.scrollTop = container.scrollHeight;
+}
+
+// 2. Keyboard Controls
+function updateKeyDisplay(key, isPressed) {
+    const keyElement = document.getElementById(`key${key}`);
+    if (keyElement) {
+        keyElement.classList.toggle('active', isPressed);
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    switch (e.key.toLowerCase()) {
+        case 'w': sendCommand('forward'); updateKeyDisplay('W', true); break;
+        case 's': sendCommand('backward'); updateKeyDisplay('S', true); break;
+        case 'a': sendCommand('left'); updateKeyDisplay('A', true); break;
+        case 'd': sendCommand('right'); updateKeyDisplay('D', true); break;
+        case 'x': sendCommand('stop'); break;
+        case 'c': sendCommand('center'); break;
+    }
 });
 
-// Gamepad Support
+document.addEventListener('keyup', (e) => {
+    switch (e.key.toLowerCase()) {
+        case 'w': case 's': case 'a': case 'd': updateKeyDisplay(e.key.toUpperCase(), false); break;
+    }
+});
+
+// 3. Gamepad Handling
 let controllerConnected = false;
 let drivingMode = "forward";
 const deadzone = 0.1;
@@ -60,7 +98,7 @@ function processGamepadInput(gamepad) {
 
     // Steering wheel mapping
     let steering = gamepad.axes[0] * 360; // Map from -90 to +90 degrees
-    if (Math.abs(gamepad.axes[0]) < deadzone) steering = 0;
+    //if (Math.abs(gamepad.axes[0]) < deadzone) steering = 0;
 
     // Change drive mode with buttons
     if (gamepad.buttons[12].pressed) drivingMode = "forward";
@@ -71,29 +109,13 @@ function processGamepadInput(gamepad) {
     updatePedals(accelerator, brake);
 }
 
-let previousSteering = null;
-let previousAccelerator = null;
-let previousBrake = null;
+setInterval(() => {
+    const gamepads = navigator.getGamepads();
+    if (gamepads[0]) {
+        processGamepadInput(gamepads[0]);
+    }
+}, 100);
 
-// Function to send commands to the Raspberry Pi for controller input
-function sendControllerCommand(command, value = 1.0) {
-    fetch(`/send_controller_command/?command=${command}&value=${value}`)
-        .then(response => response.json())
-        .then(data => console.log(`Controller Command sent: ${data.command}, Value: ${data.value}`))
-        .catch(error => console.error("Error sending controller command:", error));
-}
-
-// Visual Updates
-function updateSteeringWheel(angle) {
-    document.getElementById("steering-wheel").style.transform = `rotate(${angle}deg)`;
-}
-
-function updatePedals(accel, brake) {
-    document.getElementById("accelerator-fill").style.height = `${Math.abs(accel) * 100}%`;
-    document.getElementById("brake-fill").style.height = `${Math.abs(brake) * 100}%`;
-}
-
-// Function to handle gamepad input
 function handleGamepadInput() {
     const gamepads = navigator.getGamepads();
     if (!gamepads) return;
@@ -148,20 +170,7 @@ function handleGamepadInput() {
     requestAnimationFrame(handleGamepadInput);
 }
 
-setInterval(() => {
-    const gamepads = navigator.getGamepads();
-    if (gamepads[0]) {
-        processGamepadInput(gamepads[0]);
-    }
-}, 100);
-
 // Gamepad Events
-window.addEventListener("gamepadconnected", () => detectGamepad());
-window.addEventListener("gamepaddisconnected", () => detectGamepad());
-
-detectGamepad();
-
-// Start listening for gamepad inputs
 window.addEventListener("gamepadconnected", (event) => {
     console.log("Gamepad connected:", event.gamepad.id);
     previousSteering = null;
@@ -170,96 +179,19 @@ window.addEventListener("gamepadconnected", (event) => {
     requestAnimationFrame(handleGamepadInput);
 });
 
-window.addEventListener("gamepaddisconnected", () => {
-    console.log("Gamepad disconnected.");
-});
+window.addEventListener("gamepaddisconnected", () => console.log("Gamepad disconnected."));
 
-// Continuously check for gamepad input
-window.addEventListener("gamepadconnected", (e) => {
-    console.log("Gamepad connected:", e.gamepad);
-    setInterval(detectGamepad, 100);
-});
-
-function detectGamepad() {
-    const gamepads = navigator.getGamepads();
-    let gamepadConnected = false;
-
-    for (const gamepad of gamepads) {
-        if (gamepad) {
-            gamepadConnected = true;
-            break;
-        }
-    }
-
-    // Update Gamepad UI Status
-    const gamepadStatus = document.getElementById("status-controller");
-    if (gamepadConnected) {
-        gamepadStatus.textContent = "Connected";
-        gamepadStatus.style.color = "green";
-    } else {
-        gamepadStatus.textContent = "No Gamepad Detected";
-        gamepadStatus.style.color = "red";
-    }
+// 4. Visual Updates
+function updateSteeringWheel(angle) {
+    document.getElementById("steering-wheel").style.transform = `rotate(${angle}deg)`;
 }
 
-// Keyboard Controls
-document.addEventListener('keydown', (e) => {
-    switch (e.key.toLowerCase()) {
-        case 'w':
-            sendCommand('forward');
-            updateKeyDisplay('W', true);
-            break;
-        case 's':
-            sendCommand('backward');
-            updateKeyDisplay('S', true);
-            break;
-        case 'a':
-            sendCommand('left');
-            updateKeyDisplay('A', true);
-            break;
-        case 'd':
-            sendCommand('right');
-            updateKeyDisplay('D', true);
-            break;
-        case 'x':
-            sendCommand('stop');
-            break;
-        case 'c':
-            sendCommand('center');
-            break;
-    }
-});
-
-document.addEventListener('keyup', (e) => {
-    switch (e.key.toLowerCase()) {
-        case 'w':
-        case 's':
-        case 'a':
-        case 'd':
-            updateKeyDisplay(e.key.toUpperCase(), false);
-            break;
-    }
-});
-
-function updateKeyDisplay(key, isPressed) {
-    const keyElement = document.getElementById(`key${key}`);
-    if (keyElement) {
-        if (isPressed) {
-            keyElement.classList.add('active');
-        } else {
-            keyElement.classList.remove('active');
-        }
-    }
+function updatePedals(accel, brake) {
+    document.getElementById("accelerator-fill").style.height = `${Math.abs(accel) * 100}%`;
+    document.getElementById("brake-fill").style.height = `${Math.abs(brake) * 100}%`;
 }
 
-function sendCommand(command) {
-    fetch(`/send_command?command=${command}`)
-        .then(response => response.json())
-        .then(data => console.log("Command sent:", data))
-        .catch(error => console.error("Error sending command:", error));
-}
-
-// Function to update telemetry status
+// 5. Telemetry Handling
 function updateTelemetry() {
     fetch("/get_telemetry/")
         .then(response => response.json())
@@ -274,13 +206,16 @@ function updateTelemetry() {
         })
         .catch(error => console.error("Error fetching telemetry data:", error));
 
-    detectGamepad(); // Check if a gamepad is connected
+    detectGamepad();
 }
 
-// Check for gamepad connection when a controller is plugged in/out
-window.addEventListener("gamepadconnected", () => detectGamepad());
-window.addEventListener("gamepaddisconnected", () => detectGamepad());
-
-// Update telemetry and gamepad status every 5 seconds
+// 6. Initialize Periodic Updates
 setInterval(updateTelemetry, 5000);
-updateTelemetry(); // Initial call
+updateTelemetry();
+
+// 7. DOM Content Loaded Handling
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".key").forEach(key => {
+        key.addEventListener("click", () => sendCommand(key.getAttribute("data-command")));
+    });
+});
