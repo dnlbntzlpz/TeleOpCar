@@ -8,25 +8,68 @@ function sendCommand(action, value = 1.0) {
 
 // Example: Hooking buttons to the sendCommand function
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("forward").addEventListener("click", () => sendCommand("forward"));
-    document.getElementById("backward").addEventListener("click", () => sendCommand("backward"));
-    document.getElementById("left").addEventListener("click", () => sendCommand("left"));
-    document.getElementById("center").addEventListener("click", () => sendCommand("center"));
-    document.getElementById("right").addEventListener("click", () => sendCommand("right"));
-    document.getElementById("stop").addEventListener("click", () => sendCommand("stop"));
+    // Select all keys that have a "data-command" attribute
+    document.querySelectorAll(".key").forEach(key => {
+        key.addEventListener("click", () => {
+            const command = key.getAttribute("data-command");
+            sendCommand(command);
+        });
+    });
 });
 
 // Gamepad Support
 let controllerConnected = false;
+let drivingMode = "forward";
+const deadzone = 0.1;
 
 function detectGamepad() {
     const gamepads = navigator.getGamepads();
+    let gamepadConnected = false;
+
     for (const gamepad of gamepads) {
         if (gamepad) {
-            controllerConnected = true;
-            handleGamepadInput(gamepad);
+            gamepadConnected = true;
+            processGamepadInput(gamepad);
+            break;
         }
     }
+
+    // Update UI
+    const gamepadStatus = document.getElementById("status-controller");
+    if (gamepadConnected) {
+        gamepadStatus.textContent = "Connected";
+        gamepadStatus.style.color = "green";
+    } else {
+        gamepadStatus.textContent = "No Gamepad Detected";
+        gamepadStatus.style.color = "red";
+    }
+}
+
+function processGamepadInput(gamepad) {
+    if (!gamepad) return;
+
+    acceleratorRaw = gamepad.axes[2]; // -1 (pressed) to 1 (unpressed)
+    brakeRaw = gamepad.axes[5]; // -1 (pressed) to 1 (unpressed)
+
+    // Normalize values to range [0, 1]
+    let accelerator = (1 - acceleratorRaw) / 2; // 0 (unpressed) to 1 (fully pressed)
+    let brake = (1 - brakeRaw) / 2; // 0 (unpressed) to 1 (fully pressed)
+
+    // Apply deadzone correction
+    if (accelerator < deadzone) accelerator = 0;
+    if (brake < deadzone) brake = 0;
+
+    // Steering wheel mapping
+    let steering = gamepad.axes[0] * 90; // Map from -90 to +90 degrees
+    if (Math.abs(gamepad.axes[0]) < deadzone) steering = 0;
+
+    // Change drive mode with buttons
+    if (gamepad.buttons[12].pressed) drivingMode = "forward";
+    if (gamepad.buttons[13].pressed) drivingMode = "reverse";
+
+    // Update visuals
+    updateSteeringWheel(steering);
+    updatePedals(accelerator, brake);
 }
 
 let previousSteering = null;
@@ -39,6 +82,16 @@ function sendControllerCommand(command, value = 1.0) {
         .then(response => response.json())
         .then(data => console.log(`Controller Command sent: ${data.command}, Value: ${data.value}`))
         .catch(error => console.error("Error sending controller command:", error));
+}
+
+// Visual Updates
+function updateSteeringWheel(angle) {
+    document.getElementById("steering-wheel").style.transform = `rotate(${angle}deg)`;
+}
+
+function updatePedals(accel, brake) {
+    document.getElementById("accelerator-fill").style.height = `${Math.abs(accel) * 100}%`;
+    document.getElementById("brake-fill").style.height = `${Math.abs(brake) * 100}%`;
 }
 
 // Function to handle gamepad input
@@ -95,6 +148,19 @@ function handleGamepadInput() {
     // Call the function again in the next animation frame
     requestAnimationFrame(handleGamepadInput);
 }
+
+setInterval(() => {
+    const gamepads = navigator.getGamepads();
+    if (gamepads[0]) {
+        processGamepadInput(gamepads[0]);
+    }
+}, 100);
+
+// Gamepad Events
+window.addEventListener("gamepadconnected", () => detectGamepad());
+window.addEventListener("gamepaddisconnected", () => detectGamepad());
+
+detectGamepad();
 
 // Start listening for gamepad inputs
 window.addEventListener("gamepadconnected", (event) => {

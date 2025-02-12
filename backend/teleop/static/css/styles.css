@@ -272,3 +272,67 @@ button:hover {
     font-size: 1rem;
     color: #333;
 }
+
+/* Steering Wheel visual */
+#steering-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+#steering-wheel {
+    width: 150px;
+    height: 150px;
+    transition: transform 0.1s ease-in-out;
+}
+
+/* Pedal Visuals */
+#pedal-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+/* Wrap each pedal with a box */
+.pedal-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The pedal (bar) itself */
+.pedal {
+    width: 50px;
+    height: 120px;
+    background: #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* The fill that grows when pressed */
+.pedal-fill {
+    width: 100%;
+    height: 0%;
+    background: #4CAF50; /* Green for accelerator */
+    position: absolute;
+    bottom: 0;
+    transition: height 0.1s ease-in-out;
+}
+
+/* Brake should be red */
+#brake .pedal-fill {
+    background: red;
+}
+
+/* Labels under pedals */
+.pedal-label {
+    margin-top: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+}

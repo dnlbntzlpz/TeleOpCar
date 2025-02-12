@@ -56,7 +56,29 @@
                     <li><strong>C</strong>: Center Steering</li>
                 </ul>
             </div>
+
+            <!-- Steering Wheel section -->
+            <div id="steering-container">
+                <img id="steering-wheel" src="{% static 'images/steering_wheel.png' %}" alt="Steering Wheel">
+            </div>
+            
+            <!-- Accelerator & Brake Visuals -->
+            <div id="pedal-container">
+                <div class="pedal-box">
+                    <div class="pedal" id="accelerator">
+                        <div class="pedal-fill" id="accelerator-fill"></div>
+                    </div>
+                    <p class="pedal-label">Accelerator</p> <!-- Label under the accelerator -->
+                </div>
+                <div class="pedal-box">
+                    <div class="pedal" id="brake">
+                        <div class="pedal-fill" id="brake-fill"></div>
+                    </div>
+                    <p class="pedal-label">Brake</p> <!-- Label under the brake -->
+                </div>
+            </div>
         </div>
+
 
         <!-- Command History -->
         <div class="command-history">
