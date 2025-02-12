@@ -48,19 +48,18 @@ function detectGamepad() {
 function processGamepadInput(gamepad) {
     if (!gamepad) return;
 
-    acceleratorRaw = gamepad.axes[2]; // -1 (pressed) to 1 (unpressed)
-    brakeRaw = gamepad.axes[5]; // -1 (pressed) to 1 (unpressed)
+    let acceleratorRaw = gamepad.axes[2];   // -1 (pressed) to 1 (unpressed)
+    let brakeRaw = gamepad.axes[5];         // -1 (pressed) to 1 (unpressed)
 
-    // Normalize values to range [0, 1]
     let accelerator = (1 - acceleratorRaw) / 2; // 0 (unpressed) to 1 (fully pressed)
-    let brake = (1 - brakeRaw) / 2; // 0 (unpressed) to 1 (fully pressed)
+    let brake = (1 - brakeRaw) / 2;             // 0 (unpressed) to 1 (fully pressed)
 
     // Apply deadzone correction
     if (accelerator < deadzone) accelerator = 0;
     if (brake < deadzone) brake = 0;
 
     // Steering wheel mapping
-    let steering = gamepad.axes[0] * 90; // Map from -90 to +90 degrees
+    let steering = gamepad.axes[0] * 360; // Map from -90 to +90 degrees
     if (Math.abs(gamepad.axes[0]) < deadzone) steering = 0;
 
     // Change drive mode with buttons
