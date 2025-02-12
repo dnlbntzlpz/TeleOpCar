@@ -17,82 +17,57 @@ h1 {
     text-align: center;
 }
 
-button {
-    margin: 5px;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background 0.3s ease;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-/* Video Container */
-#video-container {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
+    gap: 30px; /* Adds equal spacing between sections */
+    width: 100%;
 }
 
+/* Video Feeds */
 .video-feeds {
-    display: flex; /* Align feeds side by side */
-    justify-content: center; /* Center-align the feeds */
-    gap: 20px; /* Add space between feeds */
+    display: flex;
+    justify-content: center;
+    gap: 20px;
     padding: 20px;
+    width: 100%;
+    position: relative;
 }
 
 .video-feed {
-    /*16:9 aspect ratio*/
-    width: 640px; /* Fixed width 426px*/
-    height: 360px; /* Fixed height 240px*/
-    text-align: center; /* Center-align labels */
-    overflow: hidden; /* Prevent overflow if content exceeds container */
+    width: 640px;
+    height: 360px;
+    text-align: center;
 }
 
 .video-feed img {
-    width: 100%; /* Scale image to fill the container width */
-    height: 100%; /* Scale image to fill the container height */
-    object-fit: cover; /* Maintain aspect ratio without distortion */
-    border-radius: 8px; /* Optional: Rounded corners */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Shadow for visuals */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .video-label {
     margin-top: 10px;
     font-size: 1rem;
-    color: #333;
     font-weight: bold;
 }
 
-/* Main container for keyboard, steering wheel, and command history */
+/* Main Layout */
 .main-container {
     display: flex;
-    justify-content: space-between; /* Spread items evenly */
-    align-items: center; /* Align everything vertically */
-    flex-wrap: nowrap; /* Prevent wrapping */
+    justify-content: space-between;
+    align-items: stretch;
+    flex-wrap: nowrap;
     gap: 20px;
     padding: 20px;
     width: 100%;
+    margin-top: 30px; /* Ensures space between video feeds and controls */
 }
 
-.controls-layout {
-    display: flex; /* Arrange items in a row */
-    justify-content: space-between; /* Distribute space evenly */
-    align-items: center; /* Align items in the center */
-    gap: 20px; /* Add space between items */
-    padding: 20px;
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-}
-
-/* Ensure each section has its own box */
+/* Boxed Sections */
 .keyboard-controls-container,
 .keyboard-instructions,
 .wheel-and-pedals-container,
@@ -102,157 +77,18 @@ button:hover {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
-}
-
-.keyboard-controls-container,
-.keyboard-instructions,
-.command-history-container {
-    flex: 1; /* Make them take equal width */
+    flex: 1; /* Makes all sections take equal width */
     min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-/* Ensure all sections have the same height */
 .keyboard-controls-container,
 .keyboard-instructions,
-.wheel-and-pedals-container,
 .command-history-container {
-    flex: 1; /* Make all sections equal width */
-    min-width: 250px; /* Prevent elements from shrinking too much */
-}
-
-.keyboard-controls ul {
-    list-style-type: none; /* Remove bullet points */
-    padding: 0;
-    margin: 0;
-}
-
-.keyboard-controls ul li {
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    font-size: 1rem;
-    margin: 5px 0;
-}
-
-.keyboard-controls ul li b {
-    width: 30px; /* Fixed width for alignment */
-    display: inline-block;
-    text-align: right;
-    margin-right: 10px;
-}
-
-/* Control Panel */
-#control-panel {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.control-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    max-width: 400px;
-}
-
-/* Sensors & Status panel */
-.status-dashboard-container {
-    display: flex; /* Use Flexbox */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically (if needed) */
-    height: 100%; /* Optional: set height to fill the parent container */
-    padding: 20px; /* Optional: padding around the dashboard */
-    box-sizing: border-box; /* Include padding in width/height calculations */
-}
-
-/* Status Dashboard Panel */
-.status-dashboard {
-    width: 90%; /* Ensure it doesn't take the full screen width */
-    max-width: 1200px; /* Prevent it from getting too big */
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-}
-
-/* Title */
-.status-dashboard h4 {
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 20px;
-    font-weight: bold;
-}
-
-/* Ensure all status items are in a single row */
-.status-row {
-    display: flex; /* Use Flexbox */
-    justify-content: space-evenly; /* Space items evenly */
-    align-items: center;
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    gap: 30px; /* Spacing between items */
-    padding: 10px 20px;
-}
-
-/* Status Items */
-.status-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    min-width: 120px; /* Ensures a consistent size */
-    max-width: 150px;
-}
-
-/* Icons */
-.status-icon {
-    font-size: 2rem;
-    margin-bottom: 5px;
-}
-
-/* Labels */
-.status-label {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 5px;
-}
-
-/* Values */
-.status-value {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Gamepad disconnected warning */
-.status-value.disconnected {
-    color: red;
-    font-weight: bold;
-}
-
-/* Responsive adjustments for smaller screens */
-@media (max-width: 1024px) {
-    .status-row {
-        flex-wrap: wrap; /* Keep it responsive */
-        gap: 15px; /* Reduce spacing slightly */
-    }
-}
-
-@media (max-width: 768px) {
-    .status-row {
-        flex-direction: column; /* Stack items vertically on smaller screens */
-        gap: 10px;
-    }
-}
-
-/* Keyboard Controls Container */
-.keyboard-controls-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 180px;
+    flex: 1;
+    min-width: 250px;
 }
 
 /* Keyboard Layout */
@@ -263,14 +99,12 @@ button:hover {
     gap: 5px;
 }
 
-/* Row for Arrow Keys */
 .key-row {
     display: flex;
     gap: 5px;
     justify-content: center;
 }
 
-/* Individual Key */
 .key {
     width: 40px;
     height: 40px;
@@ -282,12 +116,9 @@ button:hover {
     justify-content: center;
     font-family: monospace;
     font-size: 16px;
-    color: #333;
     transition: all 0.15s ease;
-    user-select: none; /* Prevent text selection */
 }
 
-/* Active Key (when pressed) */
 .key.active {
     background: #4caf50;
     color: white;
@@ -295,119 +126,15 @@ button:hover {
     transform: translateY(1px);
 }
 
-/* Keyboard Control List */
-.control-list {
-    flex: 1;
-    padding: 15px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.control-list h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    color: #333;
-    font-weight: 600;
-}
-
-.control-list ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.control-list li {
-    margin: 5px 0;
-    font-size: 1rem;
-    color: #555;
-    display: flex;
-    align-items: center;
-}
-
-.control-list li strong {
-    width: 80px;
-    font-size: 1rem;
-    color: #333;
-}
-
-/* Steering Wheel visual */
-#steering-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-}
-
-#steering-wheel {
-    width: 150px;
-    height: 150px;
-    transition: transform 0.1s ease-in-out;
-}
-
-/* Pedal Visuals */
-#pedal-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    margin-top: 20px;
-}
-
-/* Wrap each pedal with a box */
-.pedal-box {
-    display: flex;
-    flex-direction: column;  /* Stack bar and label vertically */
-    align-items: center;
-    text-align: center;
-}
-
-/* The pedal (bar) itself */
-.pedals {
-    display: flex;
-    gap: 30px;
-    align-items: center;
-}
-
-.pedal {
-    width: 50px;
-    height: 120px;
-    background: #ccc;
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-}
-
-.pedal-fill {
-    width: 100%;
-    height: 0%;
-    background: #4CAF50; /* Green for accelerator */
-    position: absolute;
-    bottom: 0;
-    transition: height 0.1s ease-in-out;
-}
-
-.pedal-label {
-    margin-top: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    text-align: center;
-    color: #333;
-}
-
-/* Brake should be red */
-#brake .pedal-fill {
-    background: red;
-}
-
-/* Steering Wheel and Pedals */
+/* Steering & Pedals */
 .wheel-and-pedals-container {
-    flex: 1.5; /* Make it slightly bigger */
+    flex: 1.5;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 15px;
+    min-width: 350px; /* Ensure enough space */
+    max-width: 400px;
 }
 
 .wheel-and-pedals-container h3 {
@@ -424,10 +151,132 @@ button:hover {
 }
 
 .wheel-and-pedals-container img {
-    width: 120px; /* Ensure correct size */
+    width: 120px;
+}
+
+/* Pedals */
+.pedals {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.pedal-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.pedal {
+    width: 50px;
+    height: 120px;
+    background: #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.pedal-fill {
+    width: 100%;
+    height: 0%;
+    background: #4CAF50;
+    position: absolute;
+    bottom: 0;
+    transition: height 0.1s ease-in-out;
+}
+
+.pedal-label {
+    margin-top: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Accelerator */
+#accelerator-fill {
+    background: #4CAF50; /* Green */
+}
+
+/* Brake */
+#brake-fill {
+    background: red !important; /* Force red color */
+}
+
+/* Status Dashboard */
+.status-dashboard {
+    width: 90%;
+    max-width: 1200px;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.status-dashboard h4 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    padding: 10px 20px;
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 120px;
+}
+
+.status-icon {
+    font-size: 2rem;
+    margin-bottom: 5px;
+}
+
+.status-label {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.status-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Gamepad Disconnected */
+.status-value.disconnected {
+    color: red;
+    font-weight: bold;
 }
 
 /* Command History */
 .command-history-container {
-    align-self: flex-start; /* Keep it aligned properly */
+    min-width: 300px;
+    align-self: flex-start;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .status-row {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .status-row {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
