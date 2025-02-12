@@ -29,10 +29,9 @@
             </div>
         </div>
 
-        <!-- Keyboard Controls Section -->
-        <div class="keyboard-controls-container">
-            <!-- Keyboard Layout -->
-            <div class="keyboard-controls">
+        <div class="main-container">
+            <!-- Keyboard Controls -->
+            <div class="keyboard-controls-container">
                 <h3>Keyboard</h3>
                 <div class="keyboard-grid">
                     <div class="key-row"><div class="key" id="keyW" data-command="forward">W</div></div>
@@ -43,49 +42,50 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Keyboard Control List -->
-            <div class="control-list">
+        
+            <!-- Keyboard Instructions -->
+            <div class="keyboard-instructions">
                 <h3>Keyboard Controls</h3>
                 <ul>
-                    <li><strong>W</strong>: Move Forward</li>
-                    <li><strong>S</strong>: Move Backward</li>
-                    <li><strong>A</strong>: Move Left</li>
-                    <li><strong>D</strong>: Move Right</li>
-                    <li><strong>X</strong>: Stop</li>
-                    <li><strong>C</strong>: Center Steering</li>
+                    <li><strong>W</strong> : Move Forward</li>
+                    <li><strong>S</strong> : Move Backward</li>
+                    <li><strong>A</strong> : Move Left</li>
+                    <li><strong>D</strong> : Move Right</li>
+                    <li><strong>X</strong> : Stop</li>
+                    <li><strong>C</strong> : Center Steering</li>
                 </ul>
             </div>
-
-            <!-- Steering Wheel section -->
-            <div id="steering-container">
-                <img id="steering-wheel" src="{% static 'images/steering_wheel.png' %}" alt="Steering Wheel">
+        
+            <!-- Steering Wheel and Pedals -->
+            <div class="wheel-and-pedals-container">
+                <h3>Steering & Pedals</h3>
+                <div class="wheel-and-pedals-content">
+                    <img id="steering-wheel" src="{% static 'images/steering-wheel.png' %}" alt="Steering Wheel" width="120px">
+                    <div class="pedals">
+                        <div class="pedal-box">
+                            <div class="pedal">
+                                <div class="pedal-fill" id="accelerator-fill"></div>
+                            </div>
+                            <span class="pedal-label">Accelerator</span>
+                        </div>
+        
+                        <div class="pedal-box">
+                            <div class="pedal">
+                                <div class="pedal-fill" id="brake-fill"></div>
+                            </div>
+                            <span class="pedal-label">Brake</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <!-- Accelerator & Brake Visuals -->
-            <div id="pedal-container">
-                <div class="pedal-box">
-                    <div class="pedal" id="accelerator">
-                        <div class="pedal-fill" id="accelerator-fill"></div>
-                    </div>
-                    <p class="pedal-label">Accelerator</p> <!-- Label under the accelerator -->
-                </div>
-                <div class="pedal-box">
-                    <div class="pedal" id="brake">
-                        <div class="pedal-fill" id="brake-fill"></div>
-                    </div>
-                    <p class="pedal-label">Brake</p> <!-- Label under the brake -->
-                </div>
+        
+            <!-- Command History -->
+            <div class="command-history-container">
+                <h3>Command History</h3>
+                <ul id="command-history"></ul>
             </div>
         </div>
-
-
-        <!-- Command History -->
-        <div class="command-history">
-            <h3>Command History</h3>
-            <ul id="commandHistoryList"></ul>
-        </div>
-
+        
         <!-- Status Dashboard -->
         <div class="status-dashboard">
             <h4>Sensors & Status</h4>
