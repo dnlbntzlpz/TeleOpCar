@@ -21,7 +21,7 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px; /* Adds equal spacing between sections */
+    gap: 30px;
     width: 100%;
 }
 
@@ -32,7 +32,6 @@ h1 {
     gap: 20px;
     padding: 20px;
     width: 100%;
-    position: relative;
 }
 
 .video-feed {
@@ -49,12 +48,6 @@ h1 {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.video-label {
-    margin-top: 10px;
-    font-size: 1rem;
-    font-weight: bold;
-}
-
 /* Main Layout */
 .main-container {
     display: flex;
@@ -64,7 +57,7 @@ h1 {
     gap: 20px;
     padding: 20px;
     width: 100%;
-    margin-top: 30px; /* Ensures space between video feeds and controls */
+    margin-top: 30px;
 }
 
 /* Boxed Sections */
@@ -77,18 +70,11 @@ h1 {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
-    flex: 1; /* Makes all sections take equal width */
+    flex: 1;
     min-width: 250px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-
-.keyboard-controls-container,
-.keyboard-instructions,
-.command-history-container {
-    flex: 1;
-    min-width: 250px;
 }
 
 /* Keyboard Layout */
@@ -148,13 +134,16 @@ h1 {
 
 /* Steering & Pedals */
 .wheel-and-pedals-container {
-    flex: 1.5;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 350px; /* Ensure enough space */
-    max-width: 400px;
+    width: 400px;
+    height: 320px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .wheel-and-pedals-container h3 {
@@ -166,8 +155,9 @@ h1 {
 .wheel-and-pedals-content {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 40px;
+    justify-content: space-around;
+    width: 100%;
+    gap: 30px;
 }
 
 .wheel-and-pedals-container img {
@@ -200,27 +190,73 @@ h1 {
 .pedal-fill {
     width: 100%;
     height: 0%;
-    background: #4CAF50;
     position: absolute;
     bottom: 0;
     transition: height 0.1s ease-in-out;
 }
 
-.pedal-label {
-    margin-top: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    color: #333;
-}
-
 /* Accelerator */
 #accelerator-fill {
-    background: #4CAF50; /* Green */
+    background: #4CAF50;
 }
 
 /* Brake */
 #brake-fill {
-    background: red !important; /* Force red color */
+    background: red !important;
+}
+
+/* Drive Mode Switch */
+.drive-mode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 15px;
+}
+
+/* Labels */
+.drive-mode-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 120px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    padding: 0 10px;
+}
+
+/* Drive Mode Toggle */
+.drive-mode-toggle {
+    position: relative;
+    width: 120px;
+    height: 45px;
+    background: #ddd;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+/* Drive Mode Indicator */
+.drive-mode-indicator {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: green;
+    transition: 0.3s ease-in-out;
+}
+
+/* Forward Mode */
+.drive-mode-forward .drive-mode-indicator {
+    left: 5px;
+    background: green;
+}
+
+/* Reverse Mode */
+.drive-mode-reverse .drive-mode-indicator {
+    left: calc(100% - 40px);
+    background: red;
 }
 
 /* Status Dashboard */
@@ -274,7 +310,6 @@ h1 {
     color: #333;
 }
 
-/* Gamepad Disconnected */
 .status-value.disconnected {
     color: red;
     font-weight: bold;
@@ -283,8 +318,8 @@ h1 {
 /* Command History */
 #command-history-box {
     width: 100%;
-    height: 150px; /* Adjust height as needed */
-    overflow-y: auto; /* Enables scrolling */
+    height: 150px;
+    overflow-y: auto;
     background: #f9f9f9;
     padding: 10px;
     border-radius: 8px;
@@ -304,7 +339,6 @@ h1 {
     border-bottom: 1px solid #ddd;
 }
 
-/* Last item should not have a bottom border */
 #command-history li:last-child {
     border-bottom: none;
 }

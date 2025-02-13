@@ -83,31 +83,49 @@ function detectGamepad() {
     }
 }
 
+// Function to update the Forward/Reverse Toggle Switch
+function updateDriveModeIndicator() {
+    const driveModeSwitch = document.getElementById("driveModeSwitch");
+
+    if (drivingMode === "forward") {
+        driveModeSwitch.classList.add("drive-mode-forward");
+        driveModeSwitch.classList.remove("drive-mode-reverse");
+    } else {
+        driveModeSwitch.classList.add("drive-mode-reverse");
+        driveModeSwitch.classList.remove("drive-mode-forward");
+    }
+}
+
+
 function processGamepadInput(gamepad) {
     if (!gamepad) return;
 
-    let acceleratorRaw = gamepad.axes[2];   // -1 (pressed) to 1 (unpressed)
-    let brakeRaw = gamepad.axes[5];         // -1 (pressed) to 1 (unpressed)
+    let acceleratorRaw = gamepad.axes[2];   
+    let brakeRaw = gamepad.axes[5];
 
-    let accelerator = (1 - acceleratorRaw) / 2; // 0 (unpressed) to 1 (fully pressed)
-    let brake = (1 - brakeRaw) / 2;             // 0 (unpressed) to 1 (fully pressed)
+    let accelerator = (1 - acceleratorRaw) / 2;
+    let brake = (1 - brakeRaw) / 2;
 
-    // Apply deadzone correction
     if (accelerator < deadzone) accelerator = 0;
     if (brake < deadzone) brake = 0;
 
-    // Steering wheel mapping
-    let steering = gamepad.axes[0] * 360; // Map from -90 to +90 degrees
+    let steering = gamepad.axes[0] * 360;
     //if (Math.abs(gamepad.axes[0]) < deadzone) steering = 0;
 
     // Change drive mode with buttons
-    if (gamepad.buttons[12].pressed) drivingMode = "forward";
-    if (gamepad.buttons[13].pressed) drivingMode = "reverse";
+    if (gamepad.buttons[12].pressed) {
+        drivingMode = "forward";
+        updateDriveModeIndicator();
+    }
+    if (gamepad.buttons[13].pressed) {
+        drivingMode = "reverse";
+        updateDriveModeIndicator();
+    }
 
-    // Update visuals
     updateSteeringWheel(steering);
     updatePedals(accelerator, brake);
 }
+
 
 setInterval(() => {
     const gamepads = navigator.getGamepads();
