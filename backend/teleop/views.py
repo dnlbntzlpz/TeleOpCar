@@ -40,7 +40,7 @@ def send_controller_command(request):
     value = float(request.GET.get('value', ''))
 
     if command == "accelerator":
-        if value >= 0 and (abs(value) <= (.1)):
+        if value >= 0 and (abs(value) <= (.3)):
             ros2_interface.publish_accelerator(0.1)
             ros2_interface.publish_brake(0.0)
         else:

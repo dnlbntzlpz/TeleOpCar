@@ -50,15 +50,19 @@ class ServoControlNode(Node):
         
     def steering_command_callback(self, msg):
         """Callback for assistive steering commands."""
-        steering_value = msg.data  # Steering value from obstacle detection (-1.0 to 1.0)
+        steering_value = 0  # Steering value from obstacle detection (-1.0 to 1.0)
+        #steering_value = 0  # Steering value from obstacle detection (-1.0 to 1.0)
 
-        # Map steering values (-1.0, 0.0, 1.0) to servo angles (0°, 90°, 180°)
+
+
+        # Map steering values (-1.0, 0.0, 1.0) to servo angles (0°, angle°, 180°)
         if steering_value < -1.0 or steering_value > 1.0:
             self.get_logger().warn(f"Invalid steering value: {steering_value}. Must be between -1.0 and 1.0.")
             return
 
         # Map the steering value to an angle
         angle = 90.0 + (steering_value * 45.0)  # -1 -> 45°, 0 -> 90°, 1 -> 135°
+        self.get_logger().warn(f"Current steering value: {steering_value}.")
         self.set_servo_angle(angle)
 
     def set_servo_angle(self, angle):
@@ -73,6 +77,7 @@ class ServoControlNode(Node):
         # Map angle to duty cycle (500-2500µs pulse width -> 2.5%-12.5% duty cycle)
         pulse_width_us = 500 + (angle / 180.0) * 2000  # Map angle to 500-2500µs range
         duty_cycle = pulse_width_us / 20000  # Convert pulse width to duty cycle (20ms period)
+        self.get_logger().info(f"(Duty Cycle: {duty_cycle:.4f})")
 
         self.servo.value = duty_cycle
         self.current_angle = angle

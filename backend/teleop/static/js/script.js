@@ -51,7 +51,12 @@ document.addEventListener('keydown', (e) => {
 
 document.addEventListener('keyup', (e) => {
     switch (e.key.toLowerCase()) {
-        case 'w': case 's': case 'a': case 'd': updateKeyDisplay(e.key.toUpperCase(), false); break;
+        case 'w':
+        case 's':
+        case 'a':
+        case 'd':
+            updateKeyDisplay(e.key.toUpperCase(), false);
+            break;
     }
 });
 
@@ -86,7 +91,6 @@ function detectGamepad() {
 // Function to update the Forward/Reverse Toggle Switch
 function updateDriveModeIndicator() {
     const driveModeSwitch = document.getElementById("driveModeSwitch");
-
     if (drivingMode === "forward") {
         driveModeSwitch.classList.add("drive-mode-forward");
         driveModeSwitch.classList.remove("drive-mode-reverse");
@@ -96,11 +100,10 @@ function updateDriveModeIndicator() {
     }
 }
 
-
 function processGamepadInput(gamepad) {
     if (!gamepad) return;
 
-    let acceleratorRaw = gamepad.axes[2];   
+    let acceleratorRaw = gamepad.axes[2];
     let brakeRaw = gamepad.axes[5];
 
     let accelerator = (1 - acceleratorRaw) / 2;
@@ -110,7 +113,6 @@ function processGamepadInput(gamepad) {
     if (brake < deadzone) brake = 0;
 
     let steering = gamepad.axes[0] * 360;
-    //if (Math.abs(gamepad.axes[0]) < deadzone) steering = 0;
 
     // Change drive mode with buttons
     if (gamepad.buttons[12].pressed) {
@@ -126,66 +128,82 @@ function processGamepadInput(gamepad) {
     updatePedals(accelerator, brake);
 }
 
-
-setInterval(() => {
-    const gamepads = navigator.getGamepads();
-    if (gamepads[0]) {
-        processGamepadInput(gamepads[0]);
-    }
-}, 100);
-
 function handleGamepadInput() {
     const gamepads = navigator.getGamepads();
     if (!gamepads) return;
 
-    const gp = gamepads[0];  // Assuming only one gamepad is connected
+    const gp = gamepads[0];
     if (!gp) return;
 
-    // Read steering wheel (axis 0), accelerator (axis 1), brake (axis 2)
-    let steering = gp.axes[0];  // Steering wheel: -1 (left), 1 (right)
-    let accelerator = gp.axes[2]; // Accelerator: -1 (pressed), 1 (released)
-    let brake = gp.axes[5];  // Brake: 1 (unpressed), -1 (pressed)
-    let carDirection = "forward"; // Default direction is forward
+    let steering = gp.axes[0];
+    let accelerator = gp.axes[2]; 
+    let brake = gp.axes[5];      
 
-    if (gp.buttons[12] && gp.buttons[12].pressed && carDirection !== "forward") {
-        carDirection = "forward";
-        console.log("Button 12 pressed: Car direction set to FORWARD.");
-    }
-    if (gp.buttons[13] && gp.buttons[13].pressed && carDirection !== "reverse") {
-        carDirection = "reverse";
-        console.log("Button 13 pressed: Car direction set to REVERSE.");
-    }
+    // Use the global drivingMode instead of local carDirection
+    let direction = drivingMode;
 
-    // Map steering to the 0-180 range
-    let steeringAngle = Math.round(((steering + 1) / 2) * 180); // Convert [-1,1] to [0,180]
+    // Steering from [-1,1] => [0,180]
+    let steeringAngle = Math.round(((steering + 1) / 2) * 180);
 
-    // Normalize accelerator values (already in range -1 to 1)
-    let accelValue = accelerator < 0 ? Math.abs(accelerator) : 0.0; // Convert -1 (full press) to positive range
+    // Convert accelerator [-1..1] => [0..1] if pressed, or 0 if released
+    let accelValue = accelerator < 0 ? Math.abs(accelerator) : 0.0;
 
-    // Normalize brake values (convert from [1, -1] to [0, 1])
-    let brakeValue = brake > 0 ? 0.0 : Math.abs((brake + 1) / 2); // Normalize so 1 (unpressed) -> 0 and -1 (pressed) -> 1
+    // Convert brake [-1..1] => [0..1] if pressed, else 0
+    let brakeValue = brake > 0 ? 0.0 : Math.abs((brake + 1) / 2);
 
-    // Send steering command only if it changes
+    // Send steering command only if changed
     if (previousSteering !== steeringAngle) {
         sendControllerCommand("steering", steeringAngle);
         previousSteering = steeringAngle;
     }
 
-    // Send accelerator or brake command only if it changes
-    if (accelValue > 0 && previousAccelerator !== accelValue && carDirection === "forward") {
-        sendControllerCommand("accelerator", accelValue);
+    // Handle accelerator release (any direction)
+    if (accelValue < 0.3 && previousAccelerator !== accelValue) {
+        sendControllerCommand("accelerator", 0.0); // Always send 0.0 when releasing the pedal
         previousAccelerator = accelValue;
-    } else if(accelValue > 0 && previousAccelerator !== accelValue && carDirection === "reverse") {
-        //sendControllerCommand("brake", 1.0);
-        sendControllerCommand("accelerator", -(accelValue - 0.1));
+    }
+
+    // Apply acceleration based on global drivingMode
+    if (accelValue > 0.3 && previousAccelerator !== accelValue) {
+        if (direction === "forward") {
+            sendControllerCommand("accelerator", accelValue);
+        } else if (direction === "reverse") {
+            // Apply the -0.1 adjustment only when actively reversing
+            let reverseValue = -(accelValue - 0.1);
+            sendControllerCommand("accelerator", reverseValue);
+        }
         previousAccelerator = accelValue;
-    } else if (brakeValue > 0 && previousBrake !== brakeValue) {
+    }
+
+    // Handle brake
+    if (brakeValue > 0 && previousBrake !== brakeValue) {
         sendControllerCommand("brake", brakeValue);
         previousBrake = brakeValue;
     }
 
-    // Call the function again in the next animation frame
     requestAnimationFrame(handleGamepadInput);
+}
+
+// Polling + handleGamepadInput
+let gamepadPolling = setInterval(() => {
+    const gamepads = navigator.getGamepads();
+    if (gamepads[0]) {
+        try {
+            processGamepadInput(gamepads[0]);
+        } catch (error) {
+            console.error("Gamepad polling stopped due to server error:", error);
+            clearInterval(gamepadPolling);
+        }
+    }
+    handleGamepadInput();
+}, 100);
+
+function pollGamepad() {
+    const gamepads = navigator.getGamepads();
+    if (gamepads && gamepads[0]) {
+        processGamepadInput(gamepads[0]);
+    }
+    requestAnimationFrame(pollGamepad);
 }
 
 // Gamepad Events
@@ -198,6 +216,11 @@ window.addEventListener("gamepadconnected", (event) => {
 });
 
 window.addEventListener("gamepaddisconnected", () => console.log("Gamepad disconnected."));
+
+window.addEventListener("beforeunload", () => {
+    cancelAnimationFrame(handleGamepadInput);
+});
+
 
 // 4. Visual Updates
 function updateSteeringWheel(angle) {
@@ -222,13 +245,16 @@ function updateTelemetry() {
             document.getElementById("status-signal").textContent = `${data.signal}%`;
             document.getElementById("status-cpu").textContent = `${data.cpu_load}%`;
         })
-        .catch(error => console.error("Error fetching telemetry data:", error));
+        .catch(error => {
+            console.error("Error fetching telemetry data:", error);
+            clearInterval(telemetryInterval);  // Stop polling if the server is down
+        });
 
     detectGamepad();
 }
 
 // 6. Initialize Periodic Updates
-setInterval(updateTelemetry, 5000);
+setInterval(updateTelemetry, 15000);
 updateTelemetry();
 
 // 7. DOM Content Loaded Handling

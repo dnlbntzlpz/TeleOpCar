@@ -37,7 +37,7 @@ class ObstacleDetectionNode(Node):
         self.steering_publisher = self.create_publisher(Float32, '/steering_command_obs', 10)
 
         # Timer to periodically read distances
-        self.timer = self.create_timer(0.1, self.check_obstacles)  # 10 Hz
+        self.timer = self.create_timer(0.5, self.check_obstacles)  # 10 Hz
 
         self.get_logger().info("Obstacle Detection Node Initialized")
 
