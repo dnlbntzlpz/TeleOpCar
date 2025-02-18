@@ -7,11 +7,11 @@ class BrakeManagerNode(Node):
         super().__init__('brake_manager_node')
 
         # Subscribers for brake commands from different sources
-        self.create_subscription(Float32, '/brake_command_ws', self.websocket_brake_callback, 10)
-        self.create_subscription(Float32, '/brake_command_obs', self.obstacle_brake_callback, 10)
+        self.create_subscription(Float32, '/brake_command_ws', self.websocket_brake_callback, 1)
+        self.create_subscription(Float32, '/brake_command_obs', self.obstacle_brake_callback, 1)
 
         # Publisher for the final brake command
-        self.final_brake_publisher = self.create_publisher(Float32, '/final_brake_command', 10)
+        self.final_brake_publisher = self.create_publisher(Float32, '/final_brake_command', 1)
 
         # Internal states for brake values
         self.websocket_brake = 0.0  # Brake value from WebSocket controller
@@ -31,7 +31,7 @@ class BrakeManagerNode(Node):
 
     def update_final_brake(self):
         """Publish the final brake command based on inputs."""
-        final_brake = min(self.websocket_brake, self.obstacle_brake)
+        final_brake = max(self.websocket_brake, self.obstacle_brake)
         self.final_brake_publisher.publish(Float32(data=final_brake))
         self.get_logger().info(f"Final Brake Command: {final_brake}")
 

@@ -16,14 +16,14 @@ def send_command(request):
     command = request.GET.get('command', '')
 
     if command == "forward":
-        ros2_interface.publish_brake(1.0)
+        ros2_interface.publish_brake(0.0)
         ros2_interface.publish_accelerator(1.0)
     elif command == "backward":
-        ros2_interface.publish_brake(1.0)
+        ros2_interface.publish_brake(0.0)
         ros2_interface.publish_accelerator(-0.9)
     elif command == "stop":
         ros2_interface.publish_accelerator(0.1)
-        ros2_interface.publish_brake(0.0)
+        ros2_interface.publish_brake(1.0)
     elif command == "left":
         ros2_interface.publish_steering(45.0)
     elif command == "right":
@@ -42,9 +42,9 @@ def send_controller_command(request):
     if command == "accelerator":
         if value >= 0 and (abs(value) <= (.3)):
             ros2_interface.publish_accelerator(0.1)
-            ros2_interface.publish_brake(0.0)
-        else:
             ros2_interface.publish_brake(1.0)
+        else:
+            ros2_interface.publish_brake(0.0)
             ros2_interface.publish_accelerator(value)
     elif command == "brake":
         ros2_interface.publish_brake(value)

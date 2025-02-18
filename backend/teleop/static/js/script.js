@@ -139,38 +139,38 @@ function handleGamepadInput() {
     let accelerator = gp.axes[2]; 
     let brake = gp.axes[5];      
 
-    // Use the global drivingMode instead of local carDirection
     let direction = drivingMode;
 
-    // Steering from [-1,1] => [0,180]
     let steeringAngle = Math.round(((steering + 1) / 2) * 180);
-
-    // Convert accelerator [-1..1] => [0..1] if pressed, or 0 if released
     let accelValue = accelerator < 0 ? Math.abs(accelerator) : 0.0;
+    let brakeValue = brake < 0 ? 0.0 : Math.abs((brake + 1) / 2);
 
-    // Convert brake [-1..1] => [0..1] if pressed, else 0
-    let brakeValue = brake > 0 ? 0.0 : Math.abs((brake + 1) / 2);
-
-    // Send steering command only if changed
     if (previousSteering !== steeringAngle) {
         sendControllerCommand("steering", steeringAngle);
         previousSteering = steeringAngle;
     }
 
-    // Handle accelerator release (any direction)
+    // If accelerator is released, stop acceleration
     if (accelValue < 0.3 && previousAccelerator !== accelValue) {
-        sendControllerCommand("accelerator", 0.0); // Always send 0.0 when releasing the pedal
+        sendControllerCommand("accelerator", 0.0); // Force stop acceleration
+        if (direction === "reverse") {
+            sendControllerCommand("accelerator", 0.1);
+            sendControllerCommand("brake", 1.0);
+        }
         previousAccelerator = accelValue;
     }
 
-    // Apply acceleration based on global drivingMode
+    // Apply acceleration based on direction
     if (accelValue > 0.3 && previousAccelerator !== accelValue) {
         if (direction === "forward") {
             sendControllerCommand("accelerator", accelValue);
         } else if (direction === "reverse") {
-            // Apply the -0.1 adjustment only when actively reversing
-            let reverseValue = -(accelValue - 0.1);
-            sendControllerCommand("accelerator", reverseValue);
+            if (accelValue < previousAccelerator){ //this means pedal is being released
+                sendControllerCommand("accelerator", 0.1);
+                sendControllerCommand("brake", 1.0);
+            } else{
+                sendControllerCommand("accelerator", -0.5); // Negative acceleration for reverse
+            }
         }
         previousAccelerator = accelValue;
     }

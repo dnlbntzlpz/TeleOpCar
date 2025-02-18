@@ -11,10 +11,10 @@ class ROS2Interface(Node):
         super().__init__('ros2_interface')
 
         # Publishers
-        self.accelerator_publisher = self.create_publisher(Float32, '/accelerator_command', 10)
-        self.direction_publisher = self.create_publisher(Bool, '/direction_command', 10)
-        self.steering_publisher = self.create_publisher(Float32, '/servo_command', 10)
-        self.brake_publisher = self.create_publisher(Float32, '/brake_command_ws', 10)
+        self.accelerator_publisher = self.create_publisher(Float32, '/accelerator_command', 1)
+        self.direction_publisher = self.create_publisher(Bool, '/direction_command', 1)
+        self.steering_publisher = self.create_publisher(Float32, '/servo_command', 1)
+        self.brake_publisher = self.create_publisher(Float32, '/brake_command_ws', 1)
 
     def publish_accelerator(self, value):
         self.accelerator_publisher.publish(Float32(data=value))

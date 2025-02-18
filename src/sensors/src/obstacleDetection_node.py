@@ -30,57 +30,95 @@ class ObstacleDetectionNode(Node):
         lgpio.gpio_claim_output(self.chip, self.right_trigger)
         lgpio.gpio_claim_input(self.chip, self.right_echo)
 
-        # Publishers for control commands
-        self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 10)
-        self.left_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_left', 10)
-        self.right_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_right', 10)
-        self.steering_publisher = self.create_publisher(Float32, '/steering_command_obs', 10)
+        # Publishers for control commands with smaller queue size
+        self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 1)
+        self.left_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_left', 1)
+        self.right_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_right', 1)
+        self.steering_publisher = self.create_publisher(Float32, '/steering_command_obs', 1)
 
-        # Timer to periodically read distances
-        self.timer = self.create_timer(0.5, self.check_obstacles)  # 10 Hz
+        # Subscribe to motor speed command to determine direction
+        self.motor_speed = 0.0
+        self.create_subscription(Float32, '/accelerator_command', self.motor_speed_callback, 1)
+
+        # Timer to periodically read distances with lower frequency
+        self.timer = self.create_timer(0.2, self.check_obstacles)  # 5 Hz
+
+        # Add history for distance readings
+        self.left_distance_history = [float('inf')] * 3
+        self.right_distance_history = [float('inf')] * 3
 
         self.get_logger().info("Obstacle Detection Node Initialized")
 
+    def motor_speed_callback(self, msg):
+        """Callback to update the current motor speed."""
+        self.motor_speed = msg.data
+
     def get_distance(self, trigger, echo):
-        """Measures distance using an ultrasonic sensor"""
+        """Measures distance using an ultrasonic sensor with timeout"""
+        MAX_TIMEOUT = 0.1  # 100ms timeout
+        
         lgpio.gpio_write(self.chip, trigger, 1)
         time.sleep(0.00001)
         lgpio.gpio_write(self.chip, trigger, 0)
 
         start_time = time.time()
-        stop_time = time.time()
+        timeout_start = start_time
 
+        # Wait for echo to go high with timeout
         while lgpio.gpio_read(self.chip, echo) == 0:
             start_time = time.time()
+            if time.time() - timeout_start > MAX_TIMEOUT:
+                return float('inf')  # Return infinite distance on timeout
 
+        timeout_start = time.time()
+        # Wait for echo to go low with timeout
         while lgpio.gpio_read(self.chip, echo) == 1:
+            if time.time() - timeout_start > MAX_TIMEOUT:
+                return float('inf')  # Return infinite distance on timeout
             stop_time = time.time()
 
         elapsed_time = stop_time - start_time
         distance = (elapsed_time * 34300) / 2  # Convert to cm
-        return distance / 100.0  # Convert to meters
+        return min(distance / 100.0, 4.0)  # Convert to meters, cap at 4 meters
+
+    def is_obstacle_detected(self, current_distance, history):
+        """Check if an obstacle is consistently detected"""
+        if current_distance == float('inf'):
+            return any(d < self.obstacle_threshold for d in history)
+        
+        # Update history (remove oldest, add newest)
+        history.pop(0)
+        history.append(current_distance)
+        
+        # Count how many readings are below threshold
+        below_threshold_count = sum(1 for d in history if d < self.obstacle_threshold)
+        return below_threshold_count >= 3
 
     def check_obstacles(self):
         try:
-            # Read distances
+            # Read distances with small delay between readings
             left_distance = self.get_distance(self.left_trigger, self.left_echo)
+            time.sleep(0.01)  # Small delay between readings
             right_distance = self.get_distance(self.right_trigger, self.right_echo)
 
-            # Initialize commands Obstacle detection logic
+            # Initialize commands
             brake_value = 0.0  # Default: no brake
             steering_value = 0.0  # Centered steering
 
-            # Obstacle detection logic (maybe it should be or instead of and)
-            if left_distance < self.obstacle_threshold and right_distance < self.obstacle_threshold:
-                brake_value = 0.0  # Full brake
-            elif left_distance < self.obstacle_threshold:
-                steering_value = 0.75  # Steer slightly right
-            elif right_distance < self.obstacle_threshold:
-                steering_value = -0.75  # Steer slightly left
-            else:
-                brake_value = 1.0
+            # Check for obstacles using history
+            left_obstacle = self.is_obstacle_detected(left_distance, self.left_distance_history)
+            right_obstacle = self.is_obstacle_detected(right_distance, self.right_distance_history)
 
-            # Publish distances
+            # Obstacle detection logic
+            if left_obstacle and right_obstacle:
+                if self.motor_speed > 0:  # Only apply brake when moving forward
+                    brake_value = 1.0  # Full brake
+            elif left_obstacle:
+                steering_value = 0.75  # Steer slightly right
+            elif right_obstacle:
+                steering_value = -0.75  # Steer slightly left
+
+            # Publish distances (use actual readings, not the obstacle detection status)
             self.left_distance_publisher.publish(Float32(data=left_distance))
             self.right_distance_publisher.publish(Float32(data=right_distance))
 
@@ -93,7 +131,8 @@ class ObstacleDetectionNode(Node):
             # Log actions
             self.get_logger().info(
                 f"Distances - Left: {left_distance:.2f}m, Right: {right_distance:.2f}m | "
-                f"Brake: {brake_value}, Steering: {steering_value}"
+                f"Obstacles - Left: {left_obstacle}, Right: {right_obstacle} | "
+                f"Brake: {brake_value}, Steering: {steering_value}, Motor Speed: {self.motor_speed}"
             )
         except Exception as e:
             self.get_logger().error(f"Error reading sensors: {str(e)}")

@@ -33,8 +33,8 @@ class MotorControlNode(Node):
         self.brake = 0.0        # Brake value
 
         # Subscribers for accelerator and brake
-        self.create_subscription(Float32, '/accelerator_command', self.accelerator_callback, 10)
-        self.create_subscription(Float32, '/final_brake_command', self.brake_callback, 10)
+        self.create_subscription(Float32, '/accelerator_command', self.accelerator_callback, 1)
+        self.create_subscription(Float32, '/final_brake_command', self.brake_callback, 1)
 
         self.get_logger().info("Motor Control Node Initialized")
 
@@ -55,30 +55,9 @@ class MotorControlNode(Node):
         self.brake = msg.data
         self.update_motor_speed()
 
-    # def update_motor_speed(self):
-    #     """Updates motor speed and direction based on accelerator and brake."""
-    #     if self.brake <= 0.5:
-    #         # Full brake, stop motors
-    #         self.left_pwm.value = 0.0
-    #         self.right_pwm.value = 0.0
-    #         self.get_logger().info("Brake activated: Motors stopped.")
-    #     else:
-    #         # Calculate motor speed from accelerator input
-    #         speed = max(0.0, self.accelerator)
-
-    #         # Set left motor (forward direction)
-    #         self.left_pwm.value = speed
-    #         self.left_dir.off()  # Forward direction for simplicity
-
-    #         # Set right motor (forward direction)
-    #         self.right_pwm.value = speed
-    #         self.right_dir.off()  # Forward direction for simplicity
-
-    #         self.get_logger().info(f"Motors set to speed: {speed}")
-
     def update_motor_speed(self):
         """Updates motor speed and direction based on accelerator and brake."""
-        if self.brake <= 0.5:
+        if self.brake >= 0.5:
             # Full brake, stop motors
             self.left_pwm.value = 0.0
             self.right_pwm.value = 0.0
