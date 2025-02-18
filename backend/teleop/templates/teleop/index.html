@@ -8,148 +8,181 @@
     <title>Teleop Car Interface</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body>
+<body class="dark-theme">
     <div class="container">
-        <!-- Header -->
+        <!-- Header with connection status -->
         <header class="header">
-            <h1>Teleop Car Interface</h1>
+            <h1>Teleop Control Interface</h1>
+            <div class="connection-status">
+                <span class="status-dot"></span>
+                <span class="status-text">Connected</span>
+            </div>
         </header>
 
-        <!-- Video Feeds -->
-        <div class="video-feeds">
-            <div class="video-feed">
-                <h3 class="camera-title">Front Camera</h3>
-                <img id="videoFeed1" src="/video_feed_1/" width="640" height="480" alt="Primary Video Stream">
-                <p class="video-label">Primary Camera</p>
-            </div>
-            <div class="video-feed">
-                <h3 class="camera-title">Rear Camera</h3>
-                <img id="videoFeed2" src="/video_feed_2/" width="640" height="480" alt="Secondary Video Stream">
-                <p class="video-label">Secondary Camera</p>
-            </div>
-        </div>
-
-        <div class="main-container">
-            <!-- Keyboard Controls -->
-            <div class="keyboard-controls-container">
-                <h3>Keyboard</h3>
-                <div class="keyboard-grid">
-                    <div class="key-row"><div class="key" id="keyW" data-command="forward">W</div></div>
-                    <div class="key-row">
-                        <div class="key" id="keyA" data-command="left">A</div>
-                        <div class="key" id="keyS" data-command="backward">S</div>
-                        <div class="key" id="keyD" data-command="right">D</div>
-                    </div>
-                    <div class="key-row">
-                        <div class="key" id="keyX" data-command="stop">X</div>
-                        <div class="key" id="keyC" data-command="center">C</div>
-                    </div>
-                </div>
-            </div>
-        
-            <!-- Keyboard Instructions -->
-            <div class="keyboard-instructions">
-                <h3>Keyboard Controls</h3>
-                <ul>
-                    <li><strong>W</strong> : Move Forward</li>
-                    <li><strong>S</strong> : Move Backward</li>
-                    <li><strong>A</strong> : Move Left</li>
-                    <li><strong>D</strong> : Move Right</li>
-                    <li><strong>X</strong> : Stop</li>
-                    <li><strong>C</strong> : Center Steering</li>
-                </ul>
-            </div>
-        
-            <!-- Steering Wheel and Pedals -->
-            <div class="wheel-and-pedals-container">
-                <h3>Steering & Pedals</h3>
-            
-                <!-- Steering and Pedals Row -->
-                <div class="wheel-and-pedals-content">
-                    <img id="steering-wheel" src="{% static 'images/steering-wheel.png' %}" alt="Steering Wheel" width="120px">
-                    <div class="pedals">
-                        <div class="pedal-box">
-                            <div class="pedal">
-                                <div class="pedal-fill" id="accelerator-fill"></div>
+        <!-- Main Content Grid -->
+        <div class="main-content">
+            <!-- Left Column - Video Feeds -->
+            <div class="video-column">
+                <section class="video-feeds">
+                    <div class="video-feed primary">
+                        <div class="feed-container">
+                            <img id="videoFeed1" src="/video_feed_1/" alt="Primary Video Stream">
+                            <div class="feed-overlay">
+                                <span class="feed-label">FRONT CAM</span>
+                                <span class="feed-status">LIVE</span>
                             </div>
-                            <span class="pedal-label">Accelerator</span>
                         </div>
-            
-                        <div class="pedal-box">
-                            <div class="pedal">
-                                <div class="pedal-fill" id="brake-fill"></div>
+                    </div>
+                    <div class="video-feed secondary">
+                        <div class="feed-container">
+                            <img id="videoFeed2" src="/video_feed_2/" alt="Secondary Video Stream">
+                            <div class="feed-overlay">
+                                <span class="feed-label">REAR CAM</span>
+                                <span class="feed-status">LIVE</span>
                             </div>
-                            <span class="pedal-label">Brake</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+
+            <!-- Middle Column - Controls -->
+            <div class="controls-column">
+                <!-- Racing Wheel Controls - Moved to top -->
+                <div class="control-panel wheel-controls">
+                    <h2 class="panel-title">Racing Wheel Controls</h2>
+                    <div class="wheel-and-pedals-content">
+                        <div class="steering-wheel">
+                            <img id="steering-wheel" src="{% static 'images/steering-wheel.png' %}" alt="Steering Wheel">
+                        </div>
+                        <div class="pedals">
+                            <div class="pedal-box">
+                                <label>Accelerator</label>
+                                <div class="pedal">
+                                    <div id="accelerator-fill" class="pedal-fill"></div>
+                                </div>
+                            </div>
+                            <div class="pedal-box">
+                                <label>Brake</label>
+                                <div class="pedal">
+                                    <div id="brake-fill" class="pedal-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="drive-mode-container">
+                        <div class="drive-mode-labels">
+                            <span>Forward</span>
+                            <span>Reverse</span>
+                        </div>
+                        <div id="driveModeSwitch" class="drive-mode-toggle drive-mode-forward">
+                            <div class="drive-mode-indicator"></div>
                         </div>
                     </div>
                 </div>
-            
-                <!-- Horizontal Drive Mode Switch -->
-                <div class="drive-mode-container">
-                    <div class="drive-mode-labels">
-                        <span>Forward|</span>
-                        <span>Reverse</span>
+
+                <!-- Manual Controls - Now below racing wheel -->
+                <div class="control-panel keyboard-controls">
+                    <h2 class="panel-title">Manual Controls</h2>
+                    <div class="controls-content">
+                        <div class="keyboard-grid">
+                            <div class="key-row">
+                                <button class="key" id="keyW" data-command="forward" aria-label="Forward">W</button>
+                            </div>
+                            <div class="key-row">
+                                <button class="key" id="keyA" data-command="left" aria-label="Left">A</button>
+                                <button class="key" id="keyS" data-command="backward" aria-label="Backward">S</button>
+                                <button class="key" id="keyD" data-command="right" aria-label="Right">D</button>
+                            </div>
+                            <div class="key-row">
+                                <button class="key emergency" id="keyX" data-command="stop" aria-label="Emergency Stop">X</button>
+                                <button class="key center" id="keyC" data-command="center" aria-label="Center">C</button>
+                            </div>
+                        </div>
+                        <div class="controls-description">
+                            <ul>
+                                <li><span class="key-name">W</span> Drive Forward</li>
+                                <li><span class="key-name">S</span> Drive Backward</li>
+                                <li><span class="key-name">A</span> Turn Left</li>
+                                <li><span class="key-name">D</span> Turn Right</li>
+                                <li><span class="key-name">X</span> Emergency Stop</li>
+                                <li><span class="key-name">C</span> Center Wheels</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="drive-mode-toggle drive-mode-forward" id="driveModeSwitch">
-                        <div class="drive-mode-indicator"></div>
-                    </div>
-                </div>
-            </div>
-            
-        
-            <!-- Command History -->
-            <div class="command-history-container">
-                <h3>Command History</h3>
-                <div id="command-history-box">
-                    <ul id="command-history"></ul>
                 </div>
             </div>
 
-        </div>
-        
-        <!-- Status Dashboard -->
-        <div class="status-dashboard">
-            <h4>Sensors & Status</h4>
-            <div class="status-row">
-                <div class="status-item">
-                    <span class="status-icon">🔥</span>
-                    <span class="status-label">Temp</span>
-                    <span class="status-value" id="status-temperature">--°C</span>
+            <!-- Right Column - Status and History -->
+            <div class="status-history-column">
+                <div class="status-panel">
+                    <h2 class="panel-title">Vehicle Status</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-icon">🔋</div>
+                            <div class="status-info">
+                                <span class="status-label">Battery</span>
+                                <span class="status-value" id="status-battery">85%</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">🔥</div>
+                            <div class="status-info">
+                                <span class="status-label">Temp</span>
+                                <span class="status-value" id="status-temperature">--°C</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">⏱️</div>
+                            <div class="status-info">
+                                <span class="status-label">Latency</span>
+                                <span class="status-value" id="status-latency">--ms</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">🎥</div>
+                            <div class="status-info">
+                                <span class="status-label">FPS</span>
+                                <span class="status-value" id="status-fps">--</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">📶</div>
+                            <div class="status-info">
+                                <span class="status-label">Connection</span>
+                                <span class="status-value" id="status-connection">WiFi</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">📊</div>
+                            <div class="status-info">
+                                <span class="status-label">Signal</span>
+                                <span class="status-value" id="status-signal">85%</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">🎮</div>
+                            <div class="status-info">
+                                <span class="status-label">Gamepad</span>
+                                <span class="status-value" id="status-controller">Disconnected</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-icon">🔄</div>
+                            <div class="status-info">
+                                <span class="status-label">CPU Load</span>
+                                <span class="status-value" id="status-cpu">0%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="status-item">
-                    <span class="status-icon">🔋</span>
-                    <span class="status-label">Battery</span>
-                    <span class="status-value" id="status-battery">--%</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">⏱️</span>
-                    <span class="status-label">Latency</span>
-                    <span class="status-value" id="status-latency">--ms</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">🎥</span>
-                    <span class="status-label">FPS</span>
-                    <span class="status-value" id="status-fps">--</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">📶</span>
-                    <span class="status-label">Connection</span>
-                    <span class="status-value" id="status-connection">WiFi</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">📊</span>
-                    <span class="status-label">Signal</span>
-                    <span class="status-value" id="status-signal">85%</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">🎮</span>
-                    <span class="status-label">Gamepad</span>
-                    <span class="status-value" id="status-controller">Disconnected</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">🔄</span>
-                    <span class="status-label">CPU Load</span>
-                    <span class="status-value" id="status-cpu">0%</span>
+
+                <div class="history-panel">
+                    <h2 class="panel-title">Command Log</h2>
+                    <div id="command-history-box" class="command-log">
+                        <ul id="command-history" class="log-list"></ul>
+                    </div>
                 </div>
             </div>
         </div>

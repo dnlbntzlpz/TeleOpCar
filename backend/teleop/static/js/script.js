@@ -20,14 +20,23 @@ function sendControllerCommand(command, value = 1.0) {
 }
 
 function addCommandToHistory(commandText) {
-    const historyBox = document.getElementById("command-history");
+    const historyList = document.getElementById("command-history");
+    if (!historyList) return; // Guard clause to prevent errors
+    
     const newCommand = document.createElement("li");
     newCommand.textContent = commandText;
-    historyBox.appendChild(newCommand);
+    historyList.appendChild(newCommand);
+    
+    // Keep only the last 50 commands
+    while (historyList.children.length > 50) {
+        historyList.removeChild(historyList.firstChild);
+    }
     
     // Auto-scroll to the latest command
     const container = document.getElementById("command-history-box");
-    container.scrollTop = container.scrollHeight;
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
 }
 
 // 2. Keyboard Controls
