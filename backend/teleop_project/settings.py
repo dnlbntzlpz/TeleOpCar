@@ -29,6 +29,8 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "192.168.10.128",  # Add your Raspberry Pi's IP
+    '.ngrok.io',
+    '.ngrok-free.app',
 ]
 
 
