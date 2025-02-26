@@ -223,7 +223,6 @@ function handleGamepadInput() {
         // Only send commands if enough time has passed
         if (previousSteering !== steeringAngle) {
             sendControllerCommand("steering", steeringAngle);
-            //enqueueCommand("steering", steeringAngle, false);
             previousSteering = steeringAngle;
         }
 
@@ -231,25 +230,17 @@ function handleGamepadInput() {
         if (Math.abs(previousAccelerator - accelValue) > 0.01) {
             if (direction === "forward") {
                 sendControllerCommand("accelerator", accelValue);
-                //enqueueCommand("accelerator", accelValue, true);
             } else if (direction === "reverse") {
-                sendControllerCommand("accelerator", -(accelValue)); // Use the actual accelValue for reverse
-                //enqueueCommand("accelerator", -(accelValue), true);
+                // Map the reverse value from 0 to 1 to -0.1 to -1
+                const reverseValue = -((1 - accelValue) * 0.9 + 0.1);
+                sendControllerCommand("accelerator", reverseValue);
             }
             previousAccelerator = accelValue;
-        }
-
-        // Stop the motors if the accelerator is released in reverse
-        if (direction === "reverse" && accelValue === 0) {
-            sendControllerCommand("brake", 1.0); // Stop the motors
-            //enqueueCommand("brake", 1.0, true);
-            previousAccelerator = 0; // Reset previous value to prevent repeated commands
         }
 
         // Only send brake command if the value has changed
         if (Math.abs(previousBrake - brakeValue) > 0.01) {
             sendControllerCommand("brake", brakeValue);
-            //enqueueCommand("brake", brakeValue, true);
             previousBrake = brakeValue;
         }
 
