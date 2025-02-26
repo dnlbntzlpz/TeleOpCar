@@ -9,14 +9,62 @@ function sendCommand(action, value = 1.0) {
         .catch(error => console.error("Error sending command:", error));
 }
 
-function sendControllerCommand(command, value = 1.0) {
+// Add this at the top level of your script
+let currentController = null; // Store the current AbortController
+let lastCommandSent = Date.now();
+const MIN_COMMAND_INTERVAL = 50; // 50ms minimum between commands
+
+// Replace the single controller with a queue of controllers
+let pendingControllers = [];
+
+// Command queue and processing
+let commandQueue = [];
+let isProcessing = false;
+
+function enqueueCommand(command, value = 1.0, isPriority = false) {
+    if (isPriority) {
+        // If it's a priority command, clear the queue and process immediately
+        console.log(`Priority command received: ${command} with value ${value}`);
+        commandQueue = [{ command, value }];
+        processCommandQueue();
+    } else {
+        // Add to the queue
+        commandQueue.push({ command, value });
+        if (!isProcessing) {
+            processCommandQueue();
+        }
+    }
+}
+
+function processCommandQueue() {
+    if (commandQueue.length === 0) {
+        isProcessing = false;
+        return;
+    }
+
+    isProcessing = true;
+    const { command, value } = commandQueue.shift();
+
     fetch(`/send_controller_command/?command=${command}&value=${value}`)
         .then(response => response.json())
         .then(data => {
             console.log(`Controller Command sent: ${data.command}, Value: ${data.value}`);
             addCommandToHistory(`Controller: ${data.command}, Value: ${value}`);
         })
-        .catch(error => console.error("Error sending controller command:", error));
+        .catch(error => {
+            console.error("Error sending controller command:", error);
+        })
+        .finally(() => {
+            // Process the next command in the queue
+            processCommandQueue();
+        });
+}
+
+// Use enqueueCommand instead of sendControllerCommand
+function sendControllerCommand(command, value = 1.0) {
+    // Determine if the command is a priority
+    const isPriority = (command === "brake" || (command === "accelerator" && value === 0));
+    enqueueCommand(command, value, isPriority);
 }
 
 function addCommandToHistory(commandText) {
@@ -78,6 +126,9 @@ const deadzone = 0.1;
 let previousSteering = 0;
 let previousAccelerator = 0;
 let previousBrake = 0;
+
+let lastCommandTime = 0; // Track the last time a command was sent
+const commandInterval = 100; // Minimum interval between commands in milliseconds
 
 function detectGamepad() {
     const gamepads = navigator.getGamepads();
@@ -167,25 +218,42 @@ function handleGamepadInput() {
     if (accelValue < accelDeadzone) accelValue = 0.0;
     if (brakeValue < brakeDeadzone) brakeValue = 0.0;
 
-    if (previousSteering !== steeringAngle) {
-        sendControllerCommand("steering", steeringAngle);
-        previousSteering = steeringAngle;
-    }
-
-    // Only send accelerator command if the value has changed
-    if (Math.abs(previousAccelerator - accelValue) > 0.01) {
-        if (direction === "forward") {
-            sendControllerCommand("accelerator", accelValue);
-        } else if (direction === "reverse") {
-            sendControllerCommand("accelerator", -(accelValue - 0.1)); // Use the actual accelValue for reverse
+    const currentTime = Date.now();
+    if (currentTime - lastCommandTime > commandInterval) {
+        // Only send commands if enough time has passed
+        if (previousSteering !== steeringAngle) {
+            sendControllerCommand("steering", steeringAngle);
+            //enqueueCommand("steering", steeringAngle, false);
+            previousSteering = steeringAngle;
         }
-        previousAccelerator = accelValue;
-    }
 
-    // Only send brake command if the value has changed
-    if (Math.abs(previousBrake - brakeValue) > 0.01) {
-        sendControllerCommand("brake", brakeValue);
-        previousBrake = brakeValue;
+        // Only send accelerator command if the value has changed
+        if (Math.abs(previousAccelerator - accelValue) > 0.01) {
+            if (direction === "forward") {
+                sendControllerCommand("accelerator", accelValue);
+                //enqueueCommand("accelerator", accelValue, true);
+            } else if (direction === "reverse") {
+                sendControllerCommand("accelerator", -(accelValue)); // Use the actual accelValue for reverse
+                //enqueueCommand("accelerator", -(accelValue), true);
+            }
+            previousAccelerator = accelValue;
+        }
+
+        // Stop the motors if the accelerator is released in reverse
+        if (direction === "reverse" && accelValue === 0) {
+            sendControllerCommand("brake", 1.0); // Stop the motors
+            //enqueueCommand("brake", 1.0, true);
+            previousAccelerator = 0; // Reset previous value to prevent repeated commands
+        }
+
+        // Only send brake command if the value has changed
+        if (Math.abs(previousBrake - brakeValue) > 0.01) {
+            sendControllerCommand("brake", brakeValue);
+            //enqueueCommand("brake", brakeValue, true);
+            previousBrake = brakeValue;
+        }
+
+        lastCommandTime = currentTime; // Update the last command time
     }
 
     requestAnimationFrame(handleGamepadInput);

@@ -17,7 +17,7 @@ tmux new-window -t teleop:2 -n "Servo" "python3 /home/pi/Desktop/TeleOpCar/src/m
 sleep 2  # 2-second delay
 
 #Ultrasonics
-tmux new-window -t teleop:3 -n "Obstacle" "python3 /home/pi/Desktop/TeleOpCar/src/sensors/src/obstacleDetection_node.py"
+#tmux new-window -t teleop:3 -n "Obstacle" "python3 /home/pi/Desktop/TeleOpCar/src/sensors/src/obstacleDetection_node.py"
 sleep 2  # 2-second delay
 
 #Brake node

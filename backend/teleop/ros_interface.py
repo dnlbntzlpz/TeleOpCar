@@ -17,8 +17,13 @@ class ROS2Interface(Node):
         self.brake_publisher = self.create_publisher(Float32, '/brake_command_ws', 1)
 
     def publish_accelerator(self, value):
-        self.accelerator_publisher.publish(Float32(data=value))
-        self.get_logger().info(f"Published accelerator: {value}")
+        # Determine direction
+        direction = Bool(data=(value >= 0))  # True for forward, False for reverse
+        self.direction_publisher.publish(direction)
+
+        # Publish absolute value of acceleration
+        self.accelerator_publisher.publish(Float32(data=abs(value)))
+        self.get_logger().info(f"Published accelerator: {abs(value)}, direction: {'forward' if direction.data else 'reverse'}")
 
     # def publish_accelerator(self, value):
     #     # Determine direction
@@ -36,3 +41,14 @@ class ROS2Interface(Node):
     def publish_brake(self, value):
         self.brake_publisher.publish(Float32(data=value))
         self.get_logger().info(f"Published brake: {value}")
+
+    def publish_commands(self, accelerator_value, steering_angle):
+        # Publish accelerator command
+        direction = Bool(data=(accelerator_value >= 0))  # True for forward, False for reverse
+        self.direction_publisher.publish(direction)
+        self.accelerator_publisher.publish(Float32(data=abs(accelerator_value)))
+        self.get_logger().info(f"Published accelerator: {abs(accelerator_value)}, direction: {'forward' if direction.data else 'reverse'}")
+
+        # Publish steering command
+        self.steering_publisher.publish(Float32(data=steering_angle))
+        self.get_logger().info(f"Published steering angle: {steering_angle}")
