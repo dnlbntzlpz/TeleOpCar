@@ -29,8 +29,8 @@ tmux new-window -t teleop:5 -n "Server" "python3 /home/pi/Desktop/TeleOpCar/back
 sleep 5  # 5-second delay
 
 #Ngrok tunnel
-tmux new-window -t teleop:6 -n "Ngrok" "ngrok http http://localhost:8071"
-sleep 2  # 2-second delay
+#tmux new-window -t teleop:6 -n "Ngrok" "ngrok http http://192.168.10.128:8071"
+#sleep 2  # 2-second delay
 
 # Attach to tmux session (optional, if you want it to open automatically)
 tmux attach-session -t teleop

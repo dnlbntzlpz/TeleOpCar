@@ -20,7 +20,7 @@ class ObstacleDetectionNode(Node):
         self.right_echo = self.get_parameter('right_echo_pin').value
 
         # Declare detection threshold parameters
-        self.declare_parameter('obstacle_threshold', 0.3)  # 30 cm
+        self.declare_parameter('obstacle_threshold', 1.0)  # 1 meter
         self.obstacle_threshold = self.get_parameter('obstacle_threshold').value
 
         # Initialize GPIO
@@ -44,8 +44,8 @@ class ObstacleDetectionNode(Node):
         self.timer = self.create_timer(0.2, self.check_obstacles)  # 5 Hz
 
         # Add history for distance readings
-        self.left_distance_history = [float('inf')] * 3
-        self.right_distance_history = [float('inf')] * 3
+        self.left_distance_history = [float('inf')] * 5  # Increase history size for smoothing
+        self.right_distance_history = [float('inf')] * 5  # Increase history size for smoothing
 
         self.get_logger().info("Obstacle Detection Node Initialized")
 
@@ -81,18 +81,15 @@ class ObstacleDetectionNode(Node):
         distance = (elapsed_time * 34300) / 2  # Convert to cm
         return min(distance / 100.0, 4.0)  # Convert to meters, cap at 4 meters
 
-    def is_obstacle_detected(self, current_distance, history):
-        """Check if an obstacle is consistently detected"""
-        if current_distance == float('inf'):
-            return any(d < self.obstacle_threshold for d in history)
-        
-        # Update history (remove oldest, add newest)
-        history.pop(0)
-        history.append(current_distance)
-        
-        # Count how many readings are below threshold
-        below_threshold_count = sum(1 for d in history if d < self.obstacle_threshold)
-        return below_threshold_count >= 3
+    def is_obstacle_detected(self, current_distance):
+        """Check if an obstacle is detected immediately"""
+        return current_distance < self.obstacle_threshold
+
+    def get_smoothed_distance(self, distance_history, new_distance):
+        """Update the distance history and return the smoothed distance."""
+        distance_history.pop(0)  # Remove the oldest reading
+        distance_history.append(new_distance)  # Add the new reading
+        return sum(distance_history) / len(distance_history)  # Return the average
 
     def check_obstacles(self):
         try:
@@ -101,13 +98,17 @@ class ObstacleDetectionNode(Node):
             time.sleep(0.01)  # Small delay between readings
             right_distance = self.get_distance(self.right_trigger, self.right_echo)
 
+            # Smooth the distances
+            smoothed_left_distance = self.get_smoothed_distance(self.left_distance_history, left_distance)
+            smoothed_right_distance = self.get_smoothed_distance(self.right_distance_history, right_distance)
+
             # Initialize commands
             brake_value = 0.0  # Default: no brake
             steering_value = 0.0  # Centered steering
 
-            # Check for obstacles using history
-            left_obstacle = self.is_obstacle_detected(left_distance, self.left_distance_history)
-            right_obstacle = self.is_obstacle_detected(right_distance, self.right_distance_history)
+            # Check for obstacles immediately using smoothed distances
+            left_obstacle = self.is_obstacle_detected(smoothed_left_distance)
+            right_obstacle = self.is_obstacle_detected(smoothed_right_distance)
 
             # Obstacle detection logic
             if left_obstacle and right_obstacle:
@@ -118,9 +119,9 @@ class ObstacleDetectionNode(Node):
             elif right_obstacle:
                 steering_value = -0.75  # Steer slightly left
 
-            # Publish distances (use actual readings, not the obstacle detection status)
-            self.left_distance_publisher.publish(Float32(data=left_distance))
-            self.right_distance_publisher.publish(Float32(data=right_distance))
+            # Publish distances (use smoothed readings)
+            self.left_distance_publisher.publish(Float32(data=smoothed_left_distance))
+            self.right_distance_publisher.publish(Float32(data=smoothed_right_distance))
 
             # Publish brake command
             self.brake_publisher.publish(Float32(data=brake_value))
@@ -130,7 +131,7 @@ class ObstacleDetectionNode(Node):
 
             # Log actions
             self.get_logger().info(
-                f"Distances - Left: {left_distance:.2f}m, Right: {right_distance:.2f}m | "
+                f"Smoothed Distances - Left: {smoothed_left_distance:.2f}m, Right: {smoothed_right_distance:.2f}m | "
                 f"Obstacles - Left: {left_obstacle}, Right: {right_obstacle} | "
                 f"Brake: {brake_value}, Steering: {steering_value}, Motor Speed: {self.motor_speed}"
             )

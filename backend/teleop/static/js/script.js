@@ -74,6 +74,11 @@ let controllerConnected = false;
 let drivingMode = "forward";
 const deadzone = 0.1;
 
+// Ensure previous values are initialized
+let previousSteering = 0;
+let previousAccelerator = 0;
+let previousBrake = 0;
+
 function detectGamepad() {
     const gamepads = navigator.getGamepads();
     let gamepadConnected = false;
@@ -154,38 +159,31 @@ function handleGamepadInput() {
     let accelValue = accelerator < 0 ? Math.abs(accelerator) : 0.0;
     let brakeValue = brake < 0 ? 0.0 : Math.abs((brake + 1) / 2);
 
+    // Define deadzones
+    const accelDeadzone = 0.1;
+    const brakeDeadzone = 0.1;
+
+    // Apply deadzones
+    if (accelValue < accelDeadzone) accelValue = 0.0;
+    if (brakeValue < brakeDeadzone) brakeValue = 0.0;
+
     if (previousSteering !== steeringAngle) {
         sendControllerCommand("steering", steeringAngle);
         previousSteering = steeringAngle;
     }
 
-    // If accelerator is released, stop acceleration
-    if (accelValue < 0.3 && previousAccelerator !== accelValue) {
-        sendControllerCommand("accelerator", 0.0); // Force stop acceleration
-        if (direction === "reverse") {
-            sendControllerCommand("accelerator", 0.1);
-            sendControllerCommand("brake", 1.0);
-        }
-        previousAccelerator = accelValue;
-    }
-
-    // Apply acceleration based on direction
-    if (accelValue > 0.3 && previousAccelerator !== accelValue) {
+    // Only send accelerator command if the value has changed
+    if (Math.abs(previousAccelerator - accelValue) > 0.01) {
         if (direction === "forward") {
             sendControllerCommand("accelerator", accelValue);
         } else if (direction === "reverse") {
-            if (accelValue < previousAccelerator){ //this means pedal is being released
-                sendControllerCommand("accelerator", 0.1);
-                sendControllerCommand("brake", 1.0);
-            } else{
-                sendControllerCommand("accelerator", -0.5); // Negative acceleration for reverse
-            }
+            sendControllerCommand("accelerator", -(accelValue - 0.1)); // Use the actual accelValue for reverse
         }
         previousAccelerator = accelValue;
     }
 
-    // Handle brake
-    if (brakeValue > 0 && previousBrake !== brakeValue) {
+    // Only send brake command if the value has changed
+    if (Math.abs(previousBrake - brakeValue) > 0.01) {
         sendControllerCommand("brake", brakeValue);
         previousBrake = brakeValue;
     }
@@ -193,27 +191,31 @@ function handleGamepadInput() {
     requestAnimationFrame(handleGamepadInput);
 }
 
+// Remove redundant polling
 // Polling + handleGamepadInput
-let gamepadPolling = setInterval(() => {
-    const gamepads = navigator.getGamepads();
-    if (gamepads[0]) {
-        try {
-            processGamepadInput(gamepads[0]);
-        } catch (error) {
-            console.error("Gamepad polling stopped due to server error:", error);
-            clearInterval(gamepadPolling);
-        }
-    }
-    handleGamepadInput();
-}, 100);
+// let gamepadPolling = setInterval(() => {
+//     const gamepads = navigator.getGamepads();
+//     if (gamepads[0]) {
+//         try {
+//             processGamepadInput(gamepads[0]);
+//         } catch (error) {
+//             console.error("Gamepad polling stopped due to server error:", error);
+//             clearInterval(gamepadPolling);
+//         }
+//     }
+//     handleGamepadInput();
+// }, 100);
 
 function pollGamepad() {
     const gamepads = navigator.getGamepads();
     if (gamepads && gamepads[0]) {
         processGamepadInput(gamepads[0]);
     }
-    requestAnimationFrame(pollGamepad);
+    setTimeout(pollGamepad, 100);
 }
+
+// Start polling
+pollGamepad();
 
 // Gamepad Events
 window.addEventListener("gamepadconnected", (event) => {
@@ -227,7 +229,8 @@ window.addEventListener("gamepadconnected", (event) => {
 window.addEventListener("gamepaddisconnected", () => console.log("Gamepad disconnected."));
 
 window.addEventListener("beforeunload", () => {
-    cancelAnimationFrame(handleGamepadInput);
+    // No need to cancel handleGamepadInput as it's not an animation frame request ID
+    // If you need to perform cleanup, do it here
 });
 
 
@@ -256,14 +259,20 @@ function updateTelemetry() {
         })
         .catch(error => {
             console.error("Error fetching telemetry data:", error);
-            clearInterval(telemetryInterval);  // Stop polling if the server is down
+            alert("Failed to fetch telemetry data. Please check your connection.");
+            // Consider retry logic instead of stopping completely
+        })
+        .finally(() => {
+            // Schedule the next update only after the current one completes
+            setTimeout(updateTelemetry, 15000);
         });
 
     detectGamepad();
 }
 
-// 6. Initialize Periodic Updates
-setInterval(updateTelemetry, 15000);
+// 6. Telemetry Polling
+// Remove the setInterval call
+// setInterval(updateTelemetry, 15000);
 updateTelemetry();
 
 // 7. DOM Content Loaded Handling

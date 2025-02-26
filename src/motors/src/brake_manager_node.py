@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
+import time
 
 class BrakeManagerNode(Node):
     def __init__(self):
@@ -16,6 +17,9 @@ class BrakeManagerNode(Node):
         # Internal states for brake values
         self.websocket_brake = 0.0  # Brake value from WebSocket controller
         self.obstacle_brake = 0.0  # Brake value from obstacle detection
+        self.last_final_brake = None  # Store the last published brake value
+        self.last_publish_time = time.time()  # Track the last publish time
+        self.last_update_time = time.time()  # Track the last update time
 
         self.get_logger().info("Brake Manager Node Initialized")
 
@@ -32,9 +36,20 @@ class BrakeManagerNode(Node):
     def update_final_brake(self):
         """Publish the final brake command based on inputs."""
         final_brake = max(self.websocket_brake, self.obstacle_brake)
-        self.final_brake_publisher.publish(Float32(data=final_brake))
-        self.get_logger().info(f"Final Brake Command: {final_brake}")
 
+        # Throttle publish rate to every 0.5 seconds
+        current_time = time.time()
+        if (self.last_final_brake != final_brake) or (current_time - self.last_publish_time > 0.5):
+            # Debounce logic: only update if enough time has passed since the last update
+            if current_time - self.last_update_time > 0.1:  # 100 ms debounce
+                self.final_brake_publisher.publish(Float32(data=final_brake))
+                self.get_logger().info(f"Final Brake Command: {final_brake}")
+                self.last_final_brake = final_brake
+                self.last_publish_time = current_time
+                self.last_update_time = current_time  # Update last update time
+
+        # Log incoming values for debugging
+        self.get_logger().info(f"WebSocket Brake: {self.websocket_brake}, Obstacle Brake: {self.obstacle_brake}")
 
 def main(args=None):
     rclpy.init(args=args)
@@ -45,7 +60,6 @@ def main(args=None):
         pass
     finally:
         rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
