@@ -31,6 +31,7 @@ ALLOWED_HOSTS = [
     "192.168.10.128",  # Add your Raspberry Pi's IP
     '.ngrok.io',
     '.ngrok-free.app',
+    '.trycloudflare.com',
 ]
 
 

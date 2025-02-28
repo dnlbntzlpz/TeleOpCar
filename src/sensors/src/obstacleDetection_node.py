@@ -20,7 +20,7 @@ class ObstacleDetectionNode(Node):
         self.right_echo = self.get_parameter('right_echo_pin').value
 
         # Declare detection threshold parameters
-        self.declare_parameter('obstacle_threshold', 1.0)  # 1 meter
+        self.declare_parameter('obstacle_threshold', 0.5)  # 1 meter
         self.obstacle_threshold = self.get_parameter('obstacle_threshold').value
 
         # Initialize GPIO

@@ -83,7 +83,7 @@ def generate_frames(camera, frame_rate=10):
             time.sleep(interval)  # Wait before retrying
             continue
 
-        frame = cv2.resize(frame, (640, 480))
+        frame = cv2.resize(frame, (320, 240))
         _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
 
         yield (b'--frame\r\n'
