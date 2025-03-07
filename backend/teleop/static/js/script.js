@@ -21,7 +21,7 @@ let pendingControllers = [];
 let commandQueue = [];
 let isProcessing = false;
 
-let selectedAcceleration = 1.0; // Default to 100%
+let selectedAcceleration = 0.25; // Default to 25%
 
 function enqueueCommand(command, value = 1.0, isPriority = false) {
     if (isPriority) {
@@ -127,12 +127,98 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
-// Add event listeners for the acceleration buttons
-document.querySelectorAll('.acceleration-button').forEach(button => {
-    button.addEventListener('click', () => {
-        setAccelerationPercentage(parseFloat(button.dataset.value));
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial acceleration to 25%
+    setAccelerationPercentage(0.25);
+    
+    // Add event listeners for the acceleration buttons
+    document.querySelectorAll('.acceleration-button').forEach(button => {
+        button.addEventListener('click', () => {
+            setAccelerationPercentage(parseFloat(button.dataset.value));
+        });
+    });
+
+    document.querySelectorAll(".key").forEach(key => {
+        key.addEventListener("click", () => sendCommand(key.getAttribute("data-command")));
+    });
+
+    // Add event listeners for resize buttons
+    document.querySelectorAll('.resize-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent any default button behavior
+            const action = button.dataset.action;
+            const target = button.dataset.target;
+            handleVideoResize(action, target);
+        });
     });
 });
+
+// Update these constants for better size control
+const MIN_FEED_WIDTH = 300;  // Minimum width in pixels
+const MAX_FEED_WIDTH = 1200; // Maximum width in pixels
+const RESIZE_STEP = 50;      // Pixels to resize per click
+
+// Updated resize function
+function handleVideoResize(action, target) {
+    const feedContainer = document.querySelector(`.video-feed.${target} .feed-container`);
+    if (!feedContainer) return;
+
+    // Get the current width, falling back to default values if not set
+    const currentWidth = feedContainer.offsetWidth || 
+        (target === 'primary' ? 600 : 450);
+    
+    let newWidth = currentWidth;
+    if (action === 'increase') {
+        newWidth = Math.min(currentWidth + RESIZE_STEP, MAX_FEED_WIDTH);
+    } else if (action === 'decrease') {
+        newWidth = Math.max(currentWidth - RESIZE_STEP, MIN_FEED_WIDTH);
+    }
+    
+    // Apply the new width and ensure it takes effect
+    feedContainer.style.width = `${newWidth}px`;
+    
+    // Force a reflow to ensure the change takes effect
+    feedContainer.offsetHeight;
+    
+    // Log the resize operation
+    console.log(`Resizing ${target} feed: ${currentWidth}px -> ${newWidth}px`);
+}
+
+// Video resize logic
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.resize-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            const target = this.getAttribute('data-target');
+            resizeVideo(action, target);
+        });
+    });
+});
+
+const videoSizes = {
+    primary: 600,
+    secondary: 450
+};
+
+const MIN_VIDEO_WIDTH = 200;
+const MAX_VIDEO_WIDTH = 1200;
+const VIDEO_RESIZE_STEP = 50;
+
+function resizeVideo(action, target) {
+    const container = document.querySelector(`.video-feed.${target} .feed-container`);
+    if (!container) return;
+
+    let currentWidth = container.offsetWidth;
+
+    if (action === 'increase' && currentWidth < MAX_FEED_WIDTH) {
+        currentWidth += VIDEO_RESIZE_STEP;
+    } else if (action === 'decrease' && currentWidth > MIN_FEED_WIDTH) {
+        currentWidth -= VIDEO_RESIZE_STEP;
+    }
+
+    currentWidth = Math.min(Math.max(currentWidth, MIN_FEED_WIDTH), MAX_FEED_WIDTH);
+    container.style.width = `${currentWidth}px`;
+}
 
 // 3. Gamepad Handling
 let controllerConnected = false;
@@ -350,10 +436,3 @@ function updateTelemetry() {
 // Remove the setInterval call
 // setInterval(updateTelemetry, 15000);
 updateTelemetry();
-
-// 7. DOM Content Loaded Handling
-document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll(".key").forEach(key => {
-        key.addEventListener("click", () => sendCommand(key.getAttribute("data-command")));
-    });
-});

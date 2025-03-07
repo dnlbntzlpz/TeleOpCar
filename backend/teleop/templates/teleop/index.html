@@ -29,7 +29,11 @@
                             <img id="videoFeed1" src="/video_feed_2/" alt="Primary Video Stream">
                             <div class="feed-overlay">
                                 <span class="feed-label">FRONT CAM</span>
-                                <span class="feed-status">LIVE</span>
+                                <div class="feed-controls">
+                                    <button class="resize-btn" data-action="decrease" data-target="primary">-</button>
+                                    <button class="resize-btn" data-action="increase" data-target="primary">+</button>
+                                    <span class="feed-status">LIVE</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -38,7 +42,11 @@
                             <img id="videoFeed2" src="/video_feed_1/" alt="Secondary Video Stream">
                             <div class="feed-overlay">
                                 <span class="feed-label">REAR CAM</span>
-                                <span class="feed-status">LIVE</span>
+                                <div class="feed-controls">
+                                    <button class="resize-btn" data-action="decrease" data-target="secondary">-</button>
+                                    <button class="resize-btn" data-action="increase" data-target="secondary">+</button>
+                                    <span class="feed-status">LIVE</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -103,11 +111,10 @@
                             </div>
                             
                             <div class="acceleration-controls">
-                                <h3>Acceleration Levels</h3>
-                                <div class="acceleration-buttons">
-                                    <button class="acceleration-button" data-value="0.25">25%</button>
-                                    <button class="acceleration-button" data-value="0.5">50%</button>
-                                    <button class="acceleration-button active" data-value="1.0">100%</button>
+                                <div class="key-row">
+                                    <button class="key acceleration-button active" data-value="0.25">25%</button>
+                                    <button class="key acceleration-button" data-value="0.5">50%</button>
+                                    <button class="key acceleration-button" data-value="1.0">100%</button>
                                 </div>
                             </div>
                         </div>

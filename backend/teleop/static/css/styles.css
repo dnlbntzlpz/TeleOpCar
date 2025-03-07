@@ -73,16 +73,16 @@ h1 {
 
 /* Primary Video Feed */
 .video-feed.primary .feed-container {
-    max-width: 600px;  /* Reduced from 800px (25% smaller) */
+    width: 600px;  /* Initial width */
     margin: 0 auto;
-    min-height: 262px; /* Reduced from 350px to maintain proportion */
+    min-height: 262px;
 }
 
 /* Secondary Video Feed */
 .video-feed.secondary .feed-container {
-    max-width: 450px;  /* Reduced from 600px (25% smaller) */
+    width: 450px;  /* Initial width */
     margin: 0 auto;
-    min-height: 187px; /* Reduced from 250px to maintain proportion */
+    min-height: 187px;
 }
 
 /* Container for Video + Overlay */
@@ -93,7 +93,7 @@ h1 {
     border: 2px solid var(--primary-color);
     background: var(--panel-bg);
     aspect-ratio: 16/9;
-    width: 100%;
+    transition: width 0.3s ease; /* Add smooth transition */
 }
 
 /* Ensure Video Takes Full Space */
@@ -700,42 +700,103 @@ h1 {
 /* Manual Controls Section */
 .controls-content {
     display: flex;
-    justify-content: space-between; /* Space between left and right sections */
-    align-items: flex-start; /* Align items at the start */
-    gap: 2rem; /* Space between the two sections */
-    width: 100%; /* Ensure it takes full width */
-    max-width: 90vw; /* Set a max width relative to the viewport */
-    margin: 0 auto; /* Center the container */
-    padding: 1rem; /* Add some padding for better spacing */
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    padding: 1rem;
 }
 
 .keyboard-controls-wrapper {
     display: flex;
-    flex-direction: column; /* Stack WASD and acceleration vertically */
-    align-items: flex-start; /* Align items to the start */
-    width: 100%; /* Ensure it takes full width */
-}
-
-.acceleration-controls {
-    display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
-    margin-top: 1rem; /* Add some space above */
+    width: 100%;
 }
 
-.acceleration-buttons {
+/* Controls Description */
+.controls-description {
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.controls-description ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.controls-description li {
     display: flex;
-    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+}
+
+.controls-description .key-name {
+    background: var(--secondary-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+    border: 1px solid var(--primary-color);
+}
+
+/* Acceleration Controls */
+.acceleration-controls {
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.acceleration-controls .key-row {
+    justify-content: center;
+    gap: 1rem;
+}
+
+.acceleration-button {
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.acceleration-button.active {
+    opacity: 1;
+    background: var(--primary-color);
+    transform: translateY(2px);
+}
+
+.feed-controls {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
 }
 
-.controls-description {
+.resize-btn {
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
     display: flex;
-    flex-direction: column; /* Stack description items vertically */
-    align-items: flex-start; /* Align items to the start */
-    max-width: 30%; /* Limit width for better readability, relative to the container */
-    flex-shrink: 0; /* Prevent shrinking */
-    margin-left: 1rem; /* Add space between description and buttons */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+    padding: 0;
+}
+
+.resize-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: var(--primary-color);
+}
+
+.resize-btn:active {
+    transform: scale(0.95);
 }
 
