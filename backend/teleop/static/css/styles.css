@@ -362,13 +362,14 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 0.5rem;
 }
 
 .key-row {
     display: flex;
-    gap: 5px;
+    gap: 0.5rem;
     justify-content: center;
+    margin-bottom: 0.5rem;
 }
 
 /* Keyboard Controls List */
@@ -699,62 +700,42 @@ h1 {
 /* Manual Controls Section */
 .controls-content {
     display: flex;
-    flex-direction: column;  /* Stack items vertically */
-    align-items: center;     /* Center items horizontally */
-    gap: 2rem;
+    justify-content: space-between; /* Space between left and right sections */
+    align-items: flex-start; /* Align items at the start */
+    gap: 2rem; /* Space between the two sections */
+    width: 100%; /* Ensure it takes full width */
+    max-width: 90vw; /* Set a max width relative to the viewport */
+    margin: 0 auto; /* Center the container */
+    padding: 1rem; /* Add some padding for better spacing */
 }
 
-.keyboard-grid {
+.keyboard-controls-wrapper {
+    display: flex;
+    flex-direction: column; /* Stack WASD and acceleration vertically */
+    align-items: flex-start; /* Align items to the start */
+    width: 100%; /* Ensure it takes full width */
+}
+
+.acceleration-controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem; /* Add some space above */
 }
 
-.key-row {
+.acceleration-buttons {
     display: flex;
+    flex-direction: row;
     gap: 0.5rem;
-    justify-content: center;
-    margin-bottom: 0.5rem;
 }
 
-/* Controls Description List */
 .controls-description {
-    width: 100%;
-    max-width: 300px;  /* Limit width for better readability */
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);  /* Add separator line */
-}
-
-.controls-description ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    text-align: left;  /* Align text to the left for better readability */
-}
-
-.controls-description li {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-    justify-content: center;  /* Center the list items */
-}
-
-.controls-description .key-name {
-    color: var(--primary-color);
-    font-weight: 600;
-    min-width: 25px;
-    text-align: center;
-}
-
-/* Panel Titles */
-.panel-title {
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    flex-shrink: 0;  /* Prevent title from shrinking */
+    flex-direction: column; /* Stack description items vertically */
+    align-items: flex-start; /* Align items to the start */
+    max-width: 30%; /* Limit width for better readability, relative to the container */
+    flex-shrink: 0; /* Prevent shrinking */
+    margin-left: 1rem; /* Add space between description and buttons */
 }
 

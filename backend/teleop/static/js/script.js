@@ -21,6 +21,8 @@ let pendingControllers = [];
 let commandQueue = [];
 let isProcessing = false;
 
+let selectedAcceleration = 1.0; // Default to 100%
+
 function enqueueCommand(command, value = 1.0, isPriority = false) {
     if (isPriority) {
         // If it's a priority command, clear the queue and process immediately
@@ -95,9 +97,17 @@ function updateKeyDisplay(key, isPressed) {
     }
 }
 
+// Function to set the selected acceleration percentage
+function setAccelerationPercentage(percentage) {
+    selectedAcceleration = percentage;
+    document.querySelectorAll('.acceleration-button').forEach(button => {
+        button.classList.toggle('active', button.dataset.value == percentage);
+    });
+}
+
 document.addEventListener('keydown', (e) => {
     switch (e.key.toLowerCase()) {
-        case 'w': sendCommand('forward'); updateKeyDisplay('W', true); break;
+        case 'w': sendCommand('forward', selectedAcceleration); updateKeyDisplay('W', true); break;
         case 's': sendCommand('backward'); updateKeyDisplay('S', true); break;
         case 'a': sendCommand('left'); updateKeyDisplay('A', true); break;
         case 'd': sendCommand('right'); updateKeyDisplay('D', true); break;
@@ -115,6 +125,13 @@ document.addEventListener('keyup', (e) => {
             updateKeyDisplay(e.key.toUpperCase(), false);
             break;
     }
+});
+
+// Add event listeners for the acceleration buttons
+document.querySelectorAll('.acceleration-button').forEach(button => {
+    button.addEventListener('click', () => {
+        setAccelerationPercentage(parseFloat(button.dataset.value));
+    });
 });
 
 // 3. Gamepad Handling

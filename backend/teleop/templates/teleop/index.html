@@ -86,20 +86,32 @@
                 <div class="control-panel keyboard-controls">
                     <h2 class="panel-title">Manual Controls</h2>
                     <div class="controls-content">
-                        <div class="keyboard-grid">
-                            <div class="key-row">
-                                <button class="key" id="keyW" data-command="forward" aria-label="Forward">W</button>
+                        <div class="keyboard-controls-wrapper">
+                            <div class="keyboard-grid">
+                                <div class="key-row">
+                                    <button class="key" id="keyW" data-command="forward" aria-label="Forward">W</button>
+                                </div>
+                                <div class="key-row">
+                                    <button class="key" id="keyA" data-command="left" aria-label="Left">A</button>
+                                    <button class="key" id="keyS" data-command="backward" aria-label="Backward">S</button>
+                                    <button class="key" id="keyD" data-command="right" aria-label="Right">D</button>
+                                </div>
+                                <div class="key-row">
+                                    <button class="key emergency" id="keyX" data-command="stop" aria-label="Emergency Stop">X</button>
+                                    <button class="key center" id="keyC" data-command="center" aria-label="Center">C</button>
+                                </div>
                             </div>
-                            <div class="key-row">
-                                <button class="key" id="keyA" data-command="left" aria-label="Left">A</button>
-                                <button class="key" id="keyS" data-command="backward" aria-label="Backward">S</button>
-                                <button class="key" id="keyD" data-command="right" aria-label="Right">D</button>
-                            </div>
-                            <div class="key-row">
-                                <button class="key emergency" id="keyX" data-command="stop" aria-label="Emergency Stop">X</button>
-                                <button class="key center" id="keyC" data-command="center" aria-label="Center">C</button>
+                            
+                            <div class="acceleration-controls">
+                                <h3>Acceleration Levels</h3>
+                                <div class="acceleration-buttons">
+                                    <button class="acceleration-button" data-value="0.25">25%</button>
+                                    <button class="acceleration-button" data-value="0.5">50%</button>
+                                    <button class="acceleration-button active" data-value="1.0">100%</button>
+                                </div>
                             </div>
                         </div>
+                        
                         <div class="controls-description">
                             <ul>
                                 <li><span class="key-name">W</span> Drive Forward</li>
