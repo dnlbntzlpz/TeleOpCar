@@ -22,6 +22,7 @@ let commandQueue = [];
 let isProcessing = false;
 
 let selectedAcceleration = 0.25; // Default to 25%
+let selectedSteeringAngle = 15; // Default to 15 degrees
 
 function enqueueCommand(command, value = 1.0, isPriority = false) {
     if (isPriority) {
@@ -105,12 +106,20 @@ function setAccelerationPercentage(percentage) {
     });
 }
 
+// Function to set the selected steering angle
+function setSteeringAngle(angle) {
+    selectedSteeringAngle = angle;
+    document.querySelectorAll('.steering-button').forEach(button => {
+        button.classList.toggle('active', button.dataset.value == angle);
+    });
+}
+
 document.addEventListener('keydown', (e) => {
     switch (e.key.toLowerCase()) {
         case 'w': sendCommand('forward', selectedAcceleration); updateKeyDisplay('W', true); break;
-        case 's': sendCommand('backward'); updateKeyDisplay('S', true); break;
-        case 'a': sendCommand('left'); updateKeyDisplay('A', true); break;
-        case 'd': sendCommand('right'); updateKeyDisplay('D', true); break;
+        case 's': sendCommand('backward', selectedAcceleration); updateKeyDisplay('S', true); break;
+        case 'a': sendCommand('left', selectedSteeringAngle); updateKeyDisplay('A', true); break;
+        case 'd': sendCommand('right', selectedSteeringAngle); updateKeyDisplay('D', true); break;
         case 'x': sendCommand('stop'); break;
         case 'c': sendCommand('center'); break;
     }
@@ -131,15 +140,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set initial acceleration to 25%
     setAccelerationPercentage(0.25);
     
+    // Set initial steering angle to 15 degrees
+    setSteeringAngle(15);
+    
     // Add event listeners for the acceleration buttons
     document.querySelectorAll('.acceleration-button').forEach(button => {
         button.addEventListener('click', () => {
             setAccelerationPercentage(parseFloat(button.dataset.value));
         });
     });
+    
+    // Add event listeners for the steering angle buttons
+    document.querySelectorAll('.steering-button').forEach(button => {
+        button.addEventListener('click', () => {
+            setSteeringAngle(parseFloat(button.dataset.value));
+        });
+    });
 
-    document.querySelectorAll(".key").forEach(key => {
-        key.addEventListener("click", () => sendCommand(key.getAttribute("data-command")));
+    // Modified event listener to exclude acceleration and steering buttons
+    document.querySelectorAll(".key:not(.acceleration-button):not(.steering-button)").forEach(key => {
+        key.addEventListener("click", () => {
+            const command = key.getAttribute("data-command");
+            if (command === "forward" || command === "backward") {
+                sendCommand(command, selectedAcceleration);
+            } else if (command === "left" || command === "right") {
+                sendCommand(command, selectedSteeringAngle);
+            } else {
+                sendCommand(command);
+            }
+        });
     });
 
     // Add event listeners for resize buttons

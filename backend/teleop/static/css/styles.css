@@ -720,12 +720,10 @@ h1 {
     width: 100%;
 }
 
-.controls-description ul {
+.controls-description .controls-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
 }
 
@@ -734,6 +732,7 @@ h1 {
     align-items: center;
     gap: 1rem;
     color: var(--text-secondary);
+    margin-bottom: 0.5rem;
 }
 
 .controls-description .key-name {
@@ -751,6 +750,14 @@ h1 {
 .acceleration-controls {
     margin-top: 2rem;
     width: 100%;
+    text-align: center;
+}
+
+.acceleration-controls h3 {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
 }
 
 .acceleration-controls .key-row {
@@ -798,5 +805,79 @@ h1 {
 
 .resize-btn:active {
     transform: scale(0.95);
+}
+
+/* Steering Controls */
+.steering-controls {
+    margin-top: 2rem;
+    width: 100%;
+    text-align: center;
+}
+
+.steering-controls h3 {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.steering-controls .key-row {
+    justify-content: center;
+    gap: 1rem;
+}
+
+.steering-button {
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.steering-button.active {
+    opacity: 1;
+    background: var(--primary-color);
+    transform: translateY(2px);
+}
+
+/* Add this new style for the controls row */
+.controls-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+/* Update acceleration and steering controls styles */
+.acceleration-controls, .steering-controls {
+    flex: 1;
+    text-align: center;
+}
+
+/* No need for the top margin since they're in the controls-row now */
+.acceleration-controls, .steering-controls {
+    margin-top: 0;
+}
+
+/* Update the button size in the controls row */
+.controls-row .key {
+    width: 60px;  /* Increased from 50px */
+    height: 55px; /* Increased from 50px */
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px; /* Add some horizontal padding */
+}
+
+@media (max-width: 768px) {
+    /* On small screens, stack them vertically */
+    .controls-row {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    /* Add some margin between them when stacked */
+    .controls-row .steering-controls {
+        margin-top: 1rem;
+    }
 }
 

@@ -14,20 +14,25 @@ def index(request):
 
 def send_command(request):
     command = request.GET.get('command', '')
+    value = float(request.GET.get('value', '1.0'))  # Default to 1.0 if no value provided
 
     if command == "forward":
         ros2_interface.publish_brake(0.0)
-        ros2_interface.publish_accelerator(1.0)
+        ros2_interface.publish_accelerator(value)
     elif command == "backward":
         ros2_interface.publish_brake(0.0)
-        ros2_interface.publish_accelerator(-0.9)
+        ros2_interface.publish_accelerator(-value + 0.1)
     elif command == "stop":
         ros2_interface.publish_accelerator(0.1)
         ros2_interface.publish_brake(1.0)
     elif command == "left":
-        ros2_interface.publish_steering(45.0)
+        # Use the value parameter as the steering angle
+        # Calculate the angle: 90 - value (to get angle to the left of center)
+        ros2_interface.publish_steering(90 - value)
     elif command == "right":
-        ros2_interface.publish_steering(135.0)
+        # Use the value parameter as the steering angle
+        # Calculate the angle: 90 + value (to get angle to the right of center)
+        ros2_interface.publish_steering(90 + value)
     elif command == "center":
         ros2_interface.publish_steering(90.0)
 
