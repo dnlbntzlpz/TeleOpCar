@@ -53,32 +53,36 @@ h1 {
     padding-top: 0; /* Reduce top padding since header is fixed */
 }
 
-/* Main Content Grid - Use auto instead of 1fr to respect individual column sizes */
+/* Main Content Grid - Keep centered with adequate spacing */
 .main-content {
     display: grid;
-    grid-template-columns: auto auto auto; /* Each column takes its natural width */
-    gap: 2rem;
+    grid-template-columns: 500px 500px;
+    gap: 1rem;
     margin-bottom: 2rem;
     min-width: min-content;
-    margin-top: 20px; /* Reduce since header is not fixed anymore */
-    margin-left: calc(max(600px, 33vw)); /* Keep space for fixed video column */
-    padding-top: 130px; /* Add padding to align other containers with video column */
+    margin-top: 20px;
+    justify-content: center;
+    padding-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1800px;
+    padding-left: 650px; /* Use padding instead of margin for more stable layout */
 }
 
-/* Video Column - Adjust fixed position to prevent header overlap */
+/* Video Column - Right-anchored positioning */
 .video-column {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    width: auto;
+    width: auto; /* Allow width to be determined by content */
     position: fixed;
-    top: 150px; /* Increased from 100px to ensure it doesn't overlap with header */
-    left: 20px;
+    top: 200px;
+    right: calc(50% + 200px); /* Position from the right side, relative to center */
     min-width: min-content;
     z-index: 100;
 }
 
-/* Video Feeds - Allow it to expand with content */
+/* Video Feeds - Right alignment for expansion to the left */
 .video-feeds {
     display: flex;
     flex-direction: column;
@@ -86,22 +90,23 @@ h1 {
     width: 100%;
     position: relative;
     min-width: min-content;
+    align-items: flex-end; /* Align items to the right edge */
 }
 
-/* Primary Video Feed - Remove fixed width constraint */
+/* Primary Video Feed */
 .video-feed.primary .feed-container {
-    width: 600px;  /* Initial width - will be overridden by JavaScript */
-    margin: 0 auto;
+    width: 600px;
     min-height: 262px;
-    max-width: 100%; /* Ensure it doesn't overflow on small screens */
+    max-width: 100%;
+    transform-origin: right center; /* Ensure scaling happens from right side */
 }
 
-/* Secondary Video Feed - Remove fixed width constraint */
+/* Secondary Video Feed */
 .video-feed.secondary .feed-container {
-    width: 450px;  /* Initial width - will be overridden by JavaScript */
-    margin: 0 auto;
+    width: 450px;
     min-height: 187px;
-    max-width: 100%; /* Ensure it doesn't overflow on small screens */
+    max-width: 100%;
+    transform-origin: right center; /* Ensure scaling happens from right side */
 }
 
 /* Container for Video + Overlay - Remove any fixed positioning */
@@ -922,4 +927,3 @@ h1 {
         margin-top: 1rem;
     }
 }
-
