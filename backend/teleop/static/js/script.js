@@ -203,7 +203,7 @@ function handleVideoResize(action, target) {
         newWidth = Math.max(currentWidth - RESIZE_STEP, MIN_FEED_WIDTH);
     }
     
-    // Apply the new width and ensure it takes effect
+    // Apply the new width to the feed container
     feedContainer.style.width = `${newWidth}px`;
     
     // Force a reflow to ensure the change takes effect
@@ -211,6 +211,33 @@ function handleVideoResize(action, target) {
     
     // Log the resize operation
     console.log(`Resizing ${target} feed: ${currentWidth}px -> ${newWidth}px`);
+    
+    // Ensure parent containers adapt to the new size
+    adjustContainerWidths();
+}
+
+// Add this new function to make sure containers adapt to feed sizes
+function adjustContainerWidths() {
+    // Get all feed containers
+    const feedContainers = document.querySelectorAll('.feed-container');
+    let maxWidth = 0;
+    
+    // Find the widest feed container
+    feedContainers.forEach(container => {
+        const width = container.offsetWidth;
+        if (width > maxWidth) {
+            maxWidth = width;
+        }
+    });
+    
+    // Add some padding
+    maxWidth += 40;
+    
+    // Get the video column and ensure it's at least as wide as the widest feed
+    const videoColumn = document.querySelector('.video-column');
+    if (videoColumn) {
+        videoColumn.style.minWidth = `${maxWidth}px`;
+    }
 }
 
 // Video resize logic

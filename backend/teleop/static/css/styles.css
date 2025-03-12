@@ -17,6 +17,7 @@ body.dark-theme {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
     min-height: 100vh;
+    overflow-y: auto;
 }
 
 body {
@@ -39,53 +40,71 @@ h1 {
 }
 
 .container {
-    max-width: 1800px;
+    max-width: none;
+    width: auto;
+    min-width: 100%;
     margin: 0 auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    overflow-x: auto;
+    position: relative;
+    padding-top: 0; /* Reduce top padding since header is fixed */
 }
 
-/* Main Content Grid */
+/* Main Content Grid - Use auto instead of 1fr to respect individual column sizes */
 .main-content {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr; /* Three equal columns */
+    grid-template-columns: auto auto auto; /* Each column takes its natural width */
     gap: 2rem;
     margin-bottom: 2rem;
+    min-width: min-content;
+    margin-top: 20px; /* Reduce since header is not fixed anymore */
+    margin-left: calc(max(600px, 33vw)); /* Keep space for fixed video column */
+    padding-top: 130px; /* Add padding to align other containers with video column */
 }
 
-/* Video Column */
+/* Video Column - Adjust fixed position to prevent header overlap */
 .video-column {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    width: 100%;
+    width: auto;
+    position: fixed;
+    top: 150px; /* Increased from 100px to ensure it doesn't overlap with header */
+    left: 20px;
+    min-width: min-content;
+    z-index: 100;
 }
 
-/* Video Feeds */
+/* Video Feeds - Allow it to expand with content */
 .video-feeds {
     display: flex;
     flex-direction: column;
     gap: 2rem;
     width: 100%;
+    position: relative;
+    min-width: min-content;
 }
 
-/* Primary Video Feed */
+/* Primary Video Feed - Remove fixed width constraint */
 .video-feed.primary .feed-container {
-    width: 600px;  /* Initial width */
+    width: 600px;  /* Initial width - will be overridden by JavaScript */
     margin: 0 auto;
     min-height: 262px;
+    max-width: 100%; /* Ensure it doesn't overflow on small screens */
 }
 
-/* Secondary Video Feed */
+/* Secondary Video Feed - Remove fixed width constraint */
 .video-feed.secondary .feed-container {
-    width: 450px;  /* Initial width */
+    width: 450px;  /* Initial width - will be overridden by JavaScript */
     margin: 0 auto;
     min-height: 187px;
+    max-width: 100%; /* Ensure it doesn't overflow on small screens */
 }
 
-/* Container for Video + Overlay */
+/* Container for Video + Overlay - Remove any fixed positioning */
 .feed-container {
     position: relative;
     border-radius: 12px;
@@ -93,7 +112,8 @@ h1 {
     border: 2px solid var(--primary-color);
     background: var(--panel-bg);
     aspect-ratio: 16/9;
-    transition: width 0.3s ease; /* Add smooth transition */
+    transition: width 0.3s ease;
+    /* Remove any position: fixed or position: sticky if present */
 }
 
 /* Ensure Video Takes Full Space */
@@ -103,18 +123,22 @@ h1 {
     object-fit: cover;
 }
 
-/* Controls Column */
+/* Controls Column - Fixed width */
 .controls-column {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    width: 500px; /* Fixed width */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
-/* Status and History Column */
+/* Status History Column - Fixed width */
 .status-history-column {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    width: 500px; /* Increased from 400px */
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 /* Common panel styles for both status and history */
@@ -124,7 +148,8 @@ h1 {
     padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    width: 100%;  /* Ensure both panels take full width */
+    width: 100%;
+    min-height: 450px; /* Set a minimum height */
 }
 
 /* Status Grid Container */
@@ -138,16 +163,16 @@ h1 {
 
 /* Command History Container */
 .command-log {
-    height: 400px; /* Return to original height */
+    height: 500px; /* Increased from 400px */
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     overflow-y: auto;
     padding: 1rem;
-    width: 100%;  /* Take full width of parent */
+    width: 100%;
     margin-top: 0.5rem;
 }
 
-/* Header Styles */
+/* Header Styles - Return to normal scroll behavior */
 .header {
     display: flex;
     justify-content: space-between;
@@ -158,6 +183,11 @@ h1 {
     margin-bottom: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    position: relative; /* Change from fixed to relative */
+    z-index: 101;
+    margin: 20px;
+    width: calc(100% - 40px);
+    box-sizing: border-box;
 }
 
 .header h1 {
@@ -246,6 +276,8 @@ h1 {
     padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Take up full width of parent, which is now fixed */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Key Styling */
@@ -596,25 +628,35 @@ h1 {
     font-size: 0.9rem;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - Preserve fixed widths until smaller screens */
 @media (max-width: 1800px) {
     .main-content {
-        grid-template-columns: 1fr 1fr 1fr;  /* Keep equal columns */
+        grid-template-columns: auto auto auto;  /* Keep natural sizing */
     }
 }
 
 @media (max-width: 1600px) {
     .main-content {
-        grid-template-columns: 1fr 1fr; /* Two columns on medium screens */
+        grid-template-columns: auto auto; /* Two columns on medium screens */
     }
     .status-history-column {
         grid-column: span 2; /* Status/history spans full width */
+        width: auto; /* Allow it to stretch */
     }
 }
 
 @media (max-width: 1200px) {
+    .video-column {
+        position: static; /* Revert to normal flow */
+        width: 100%;
+    }
+    
     .main-content {
-        grid-template-columns: 1fr; /* Single column on smaller screens */
+        margin-left: 0;
+        grid-template-columns: auto;
+    }
+    .controls-column, .status-history-column {
+        width: 100%; /* Full width on small screens */
     }
     .status-history-column {
         grid-column: auto; /* Reset column span */
