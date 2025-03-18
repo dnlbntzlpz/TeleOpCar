@@ -314,15 +314,18 @@ function detectGamepad() {
 
 // Function to update the Forward/Reverse Toggle Switch
 function updateDriveModeIndicator() {
-    const driveModeSwitch = document.getElementById("driveModeSwitch");
+    const driveModeToggle = document.getElementById("drive-mode-toggle");
+    if (!driveModeToggle) return; // Add a guard clause to prevent errors
+    
     if (drivingMode === "forward") {
-        driveModeSwitch.classList.add("drive-mode-forward");
-        driveModeSwitch.classList.remove("drive-mode-reverse");
+        driveModeToggle.classList.add("drive-mode-forward");
+        driveModeToggle.classList.remove("drive-mode-reverse");
     } else {
-        driveModeSwitch.classList.add("drive-mode-reverse");
-        driveModeSwitch.classList.remove("drive-mode-forward");
+        driveModeToggle.classList.add("drive-mode-reverse");
+        driveModeToggle.classList.remove("drive-mode-forward");
     }
 }
+
 
 function processGamepadInput(gamepad) {
     if (!gamepad) return;
@@ -405,6 +408,11 @@ function handleGamepadInput() {
 
         lastCommandTime = currentTime; // Update the last command time
     }
+    
+    // steering axis is -1 (full left) to 1 (full right)
+    // rotate steering wheel image -180deg to +180deg
+    const wheelRotation = steering * 180;
+    updateSteeringWheel(wheelRotation);
 
     requestAnimationFrame(handleGamepadInput);
 }
@@ -674,29 +682,74 @@ function enterFullscreen() {
         feedControls.style.gap = "0.5rem";
     }
     
-    // Position secondary feed at the top center with increased size
+    // Position secondary feed at the top right corner instead of top center
     if (secondaryFeed) {
-        secondaryFeed.style.position = "fixed";
-        secondaryFeed.style.top = "20px";
-        secondaryFeed.style.left = "50%";
-        secondaryFeed.style.transform = "translateX(-50%)";
-        secondaryFeed.style.width = "400px"; // Increased from 300px to 400px
-        secondaryFeed.style.zIndex = "1002";
+        // First, completely remove any existing inline styles that might be interfering
+        secondaryFeed.removeAttribute('style');
         
-        // Make sure the feed container and image are properly sized
+        // Force the secondary feed to the top right with !important styles
+        secondaryFeed.style.cssText = `
+            position: fixed !important;
+            top: 20px !important;
+            left: auto !important;
+            right: 20px !important;
+            transform: none !important;
+            width: 300px !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        `;
+        
+        // Make sure the feed container has the correct styles
         const secondaryFeedContainer = secondaryFeed.querySelector('.feed-container');
         if (secondaryFeedContainer) {
-            secondaryFeedContainer.style.width = "100%";
-            secondaryFeedContainer.style.height = "auto";
+            secondaryFeedContainer.removeAttribute('style');
+            secondaryFeedContainer.style.cssText = `
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                border: 2px solid #00a8ff !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+            `;
             
             // Ensure the image fills the container
             const secondaryFeedImg = secondaryFeedContainer.querySelector('img');
             if (secondaryFeedImg) {
-                secondaryFeedImg.style.width = "100%";
-                secondaryFeedImg.style.height = "100%";
-                secondaryFeedImg.style.objectFit = "cover";
+                secondaryFeedImg.removeAttribute('style');
+                secondaryFeedImg.style.cssText = `
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                    display: block !important;
+                `;
             }
         }
+        
+        // Make sure the overlay is properly positioned
+        const secondaryFeedOverlay = secondaryFeed.querySelector('.feed-overlay');
+        if (secondaryFeedOverlay) {
+            secondaryFeedOverlay.removeAttribute('style');
+            secondaryFeedOverlay.style.cssText = `
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                z-index: 1 !important;
+                padding: 8px !important;
+                background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%) !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            `;
+        }
+        
+        // Try to force a reflow to ensure changes take effect
+        secondaryFeed.offsetHeight;
+        
+        // Log to console for debugging
+        console.log("Applied forced styles to secondary feed:", secondaryFeed);
     }
     
     // Position status history column on the right side instead of left
@@ -710,19 +763,23 @@ function enterFullscreen() {
         statusHistoryColumn.style.maxHeight = "95vh";
         statusHistoryColumn.style.overflowY = "auto";
         statusHistoryColumn.style.margin = "0";
-        statusHistoryColumn.style.opacity = "0.75";
+        statusHistoryColumn.style.opacity = "0.75"; // Changed from 0.75 to 0.25 (more transparent)
         statusHistoryColumn.style.zIndex = "1002";
         statusHistoryColumn.style.padding = "10px";
         statusHistoryColumn.style.boxSizing = "border-box";
         statusHistoryColumn.style.backdropFilter = "blur(5px)";
         
-        // Add hover effect to make it fully opaque when hovered
-        statusHistoryColumn.addEventListener('mouseenter', function() {
+        // Store handlers so they can be removed later
+        statusHistoryColumn.mouseEnterHandler = function() {
             this.style.opacity = "1";
-        });
-        statusHistoryColumn.addEventListener('mouseleave', function() {
-            this.style.opacity = "0.75";
-        });
+        };
+        statusHistoryColumn.mouseLeaveHandler = function() {
+            this.style.opacity = "0.25";
+        };
+        
+        // Add hover effect to make it fully opaque when hovered
+        statusHistoryColumn.addEventListener('mouseenter', statusHistoryColumn.mouseEnterHandler);
+        statusHistoryColumn.addEventListener('mouseleave', statusHistoryColumn.mouseLeaveHandler);
         
         // Hide the command log and its parent panel
         const historyPanel = statusHistoryColumn.querySelector('.history-panel');
@@ -736,21 +793,19 @@ function enterFullscreen() {
             commandLog.style.display = "none";
         }
         
-        // Specifically target the vehicle status panel to make it taller
+        // Specifically target the vehicle status panel to make it taller and more transparent
         const vehicleStatusPanel = statusHistoryColumn.querySelector('.status-panel');
         if (vehicleStatusPanel) {
             vehicleStatusPanel.style.minHeight = "520px";
             vehicleStatusPanel.style.height = "auto";
+            vehicleStatusPanel.style.backgroundColor = "rgba(0, 0, 0, 0.3)"; // Match the transparency of controls
+            vehicleStatusPanel.style.borderRadius = "8px"; // Match the border radius of controls
         }
         
-        // Ensure status grid items have proper width and don't get cut off
+        // Force single column layout for status grid with !important
         const statusGrid = statusHistoryColumn.querySelector('.status-grid');
         if (statusGrid) {
-            statusGrid.style.gridTemplateColumns = "1fr 1fr";
-            statusGrid.style.width = "100%";
-            statusGrid.style.boxSizing = "border-box";
-            statusGrid.style.gap = "15px";
-            statusGrid.style.padding = "5px";
+            statusGrid.style.cssText = "grid-template-columns: 1fr !important; width: 100%; gap: 10px; padding: 5px;";
             
             // Make sure each status item has enough space
             const statusItems = statusGrid.querySelectorAll('.status-item');
@@ -761,25 +816,20 @@ function enterFullscreen() {
                 item.style.overflow = "hidden";
                 item.style.display = "flex";
                 item.style.alignItems = "center";
-                item.style.padding = "12px";
-                item.style.marginBottom = "10px";
-                
-                // Ensure status values don't get cut off
-                const statusValue = item.querySelector('.status-value');
-                if (statusValue) {
-                    statusValue.style.whiteSpace = "nowrap";
-                    statusValue.style.overflow = "hidden";
-                    statusValue.style.textOverflow = "ellipsis";
-                    statusValue.style.fontSize = "1.1rem";
-                }
-                
-                // Ensure status icons have enough space
-                const statusIcon = item.querySelector('.status-icon');
-                if (statusIcon) {
-                    statusIcon.style.marginRight = "10px";
-                    statusIcon.style.fontSize = "1.5rem";
-                }
+                item.style.padding = "10px";
+                item.style.marginBottom = "5px";
+                item.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
+                item.style.borderRadius = "6px";
             });
+        }
+        
+        // Make the panel title more compact
+        const statusTitle = vehicleStatusPanel ? vehicleStatusPanel.querySelector('h2') : null;
+        if (statusTitle) {
+            statusTitle.style.fontSize = "1rem";
+            statusTitle.style.marginBottom = "10px";
+            statusTitle.style.textAlign = "center";
+            statusTitle.style.whiteSpace = "nowrap";
         }
     }
     
@@ -801,20 +851,24 @@ function enterFullscreen() {
         controlsColumn.style.zIndex = "1002";
         controlsColumn.style.padding = "10px";
         controlsColumn.style.boxSizing = "border-box";
-        controlsColumn.style.backdropFilter = "blur(5px)";
-        controlsColumn.style.borderTop = "1px solid rgba(255, 255, 255, 0.1)"; // Add top border
+        controlsColumn.style.backdropFilter = "none";
+        controlsColumn.style.borderTop = "none"; // Add top border
         controlsColumn.style.display = "flex"; // Use flexbox for layout
         controlsColumn.style.justifyContent = "center"; // Center the controls horizontally
         controlsColumn.style.alignItems = "center"; // Center the controls vertically
         controlsColumn.style.flexDirection = "row"; // Ensure horizontal layout
         
-        // Add hover effect to make it fully opaque when hovered
-        controlsColumn.addEventListener('mouseenter', function() {
+        // Store handlers so they can be removed later
+        controlsColumn.mouseEnterHandler = function() {
             this.style.opacity = "1";
-        });
-        controlsColumn.addEventListener('mouseleave', function() {
+        };
+        controlsColumn.mouseLeaveHandler = function() {
             this.style.opacity = "0.75";
-        });
+        };
+        
+        // Add hover effect to make it fully opaque when hovered
+        controlsColumn.addEventListener('mouseenter', controlsColumn.mouseEnterHandler);
+        controlsColumn.addEventListener('mouseleave', controlsColumn.mouseLeaveHandler);
         
         // Get the control panels
         const wheelControls = controlsColumn.querySelector('.wheel-controls');
@@ -1230,299 +1284,121 @@ function exitFullscreen() {
     mainContent.classList.remove('fullscreen-mode');
     
     // Reset main content styles
-    mainContent.style.position = '';
-    mainContent.style.top = '';
-    mainContent.style.left = '';
-    mainContent.style.width = '';
-    mainContent.style.height = '';
-    mainContent.style.padding = '';
-    mainContent.style.margin = '';
-    mainContent.style.backgroundColor = '';
-    mainContent.style.display = '';
-    mainContent.style.flexDirection = '';
-    mainContent.style.justifyContent = '';
-    mainContent.style.alignItems = '';
-    mainContent.style.zIndex = '';
+    mainContent.style = "";
     
     // Reset container styles
     if (container) {
-        container.style.padding = "";
-        container.style.margin = "";
-        container.style.maxWidth = "";
-        container.style.width = "";
-        container.style.height = "";
-        container.style.overflow = "";
+        container.style = "";
     }
     
     // Reset video column styles
     if (videoColumn) {
-        videoColumn.style.position = "";
-        videoColumn.style.top = "";
-        videoColumn.style.left = "";
-        videoColumn.style.right = "";
-        videoColumn.style.width = "";
-        videoColumn.style.height = "";
-        videoColumn.style.display = "";
-        videoColumn.style.justifyContent = "";
-        videoColumn.style.alignItems = "";
-        videoColumn.style.padding = "";
-        videoColumn.style.margin = "";
-        videoColumn.style.flex = "";
-        videoColumn.style.order = "";
-        videoColumn.style.zIndex = "";
+        videoColumn.style = "";
     }
     
     // Reset video feeds styles
     if (videoFeeds) {
-        videoFeeds.style.position = "";
-        videoFeeds.style.width = "";
-        videoFeeds.style.height = "";
-        videoFeeds.style.display = "";
-        videoFeeds.style.flexDirection = "";
-        videoFeeds.style.justifyContent = "";
-        videoFeeds.style.alignItems = "";
-        videoFeeds.style.padding = "";
-        videoFeeds.style.margin = "";
+        videoFeeds.style = "";
     }
     
     // Reset primary feed styles
     if (primaryFeed) {
-        primaryFeed.style.position = "";
-        primaryFeed.style.width = "";
-        primaryFeed.style.height = "";
-        primaryFeed.style.display = "";
-        primaryFeed.style.justifyContent = "";
-        primaryFeed.style.alignItems = "";
-        primaryFeed.style.margin = "";
-        primaryFeed.style.zIndex = "";
+        primaryFeed.style = "";
     }
     
     // Reset primary feed container styles
     if (primaryFeedContainer) {
-        primaryFeedContainer.style.position = "";
-        primaryFeedContainer.style.width = "";
-        primaryFeedContainer.style.height = "";
-        primaryFeedContainer.style.maxHeight = "";
-        primaryFeedContainer.style.maxWidth = "";
-        primaryFeedContainer.style.minWidth = "";
-        primaryFeedContainer.style.minHeight = "";
-        primaryFeedContainer.style.borderRadius = "";
-        primaryFeedContainer.style.border = "";
-        primaryFeedContainer.style.margin = "";
-        primaryFeedContainer.style.overflow = "";
-        primaryFeedContainer.style.backgroundColor = "";
-        primaryFeedContainer.style.display = "";
-        primaryFeedContainer.style.justifyContent = "";
-        primaryFeedContainer.style.alignItems = "";
+        primaryFeedContainer.style = "";
     }
     
     // Reset primary feed image styles
     if (primaryFeedImg) {
-        primaryFeedImg.style.width = "";
-        primaryFeedImg.style.height = "";
-        primaryFeedImg.style.objectFit = "";
-        primaryFeedImg.style.position = "";
-        primaryFeedImg.style.display = "";
-        primaryFeedImg.style.margin = "";
+        primaryFeedImg.style = "";
     }
     
     // Reset primary feed overlay styles
     if (primaryFeedOverlay) {
-        primaryFeedOverlay.style.position = "";
-        primaryFeedOverlay.style.top = "";
-        primaryFeedOverlay.style.left = "";
-        primaryFeedOverlay.style.right = "";
-        primaryFeedOverlay.style.width = "";
-        primaryFeedOverlay.style.boxSizing = "";
-        primaryFeedOverlay.style.zIndex = "";
-        primaryFeedOverlay.style.padding = "";
-        primaryFeedOverlay.style.pointerEvents = "";
-        primaryFeedOverlay.style.background = "";
-        primaryFeedOverlay.style.display = "";
-        primaryFeedOverlay.style.justifyContent = "";
-        primaryFeedOverlay.style.alignItems = "";
+        primaryFeedOverlay.style = "";
     }
     
     // Reset feed label styles
     if (feedLabel) {
-        feedLabel.style.color = "";
-        feedLabel.style.fontWeight = "";
-        feedLabel.style.fontSize = "";
-        feedLabel.style.textTransform = "";
-        feedLabel.style.letterSpacing = "";
-        feedLabel.style.textShadow = "";
+        feedLabel.style = "";
     }
     
     // Reset feed controls styles
     if (feedControls) {
-        feedControls.style.display = "";
-        feedControls.style.alignItems = "";
-        feedControls.style.gap = "";
+        feedControls.style = "";
     }
     
     // Reset secondary feed styles
     if (secondaryFeed) {
-        secondaryFeed.style.position = "";
-        secondaryFeed.style.top = "";
-        secondaryFeed.style.left = "";
-        secondaryFeed.style.right = "";
-        secondaryFeed.style.transform = "";
-        secondaryFeed.style.width = "";
-        secondaryFeed.style.zIndex = "";
+        secondaryFeed.style = "";
     }
     
-    // Reset controls column styles
+    // Reset controls column styles - this is the key part that was failing
     if (controlsColumn) {
-        controlsColumn.style.position = "";
-        controlsColumn.style.bottom = "";
-        controlsColumn.style.left = "";
-        controlsColumn.style.right = "";
-        controlsColumn.style.transform = "";
-        controlsColumn.style.width = "";
-        controlsColumn.style.maxHeight = "";
-        controlsColumn.style.opacity = "";
-        controlsColumn.style.zIndex = "";
-        controlsColumn.style.overflow = "";
-        controlsColumn.style.display = "";
-        controlsColumn.style.flexDirection = "";
-        controlsColumn.style.justifyContent = "";
-        controlsColumn.style.alignItems = "";
-        controlsColumn.style.padding = "";
-        controlsColumn.style.margin = "";
-        controlsColumn.style.backgroundColor = "";
+        // Remove the event listeners completely
+        if (controlsColumn.mouseEnterHandler) {
+            controlsColumn.removeEventListener('mouseenter', controlsColumn.mouseEnterHandler);
+            controlsColumn.removeEventListener('mouseleave', controlsColumn.mouseLeaveHandler);
+            // Clear the handlers
+            controlsColumn.mouseEnterHandler = null;
+            controlsColumn.mouseLeaveHandler = null;
+        }
         
-        // Reset keyboard controls
+        // Clear all styles completely
+        controlsColumn.style = "";
+        
+        // Reset keyboard controls by clearing all styles
         const keyboardControls = controlsColumn.querySelector('.keyboard-controls');
         if (keyboardControls) {
-            keyboardControls.style.width = "";
-            keyboardControls.style.minWidth = "";
-            keyboardControls.style.margin = "";
-            keyboardControls.style.padding = "";
-            keyboardControls.style.display = "";
-            keyboardControls.style.flexDirection = "";
+            keyboardControls.style = "";
+            
+            // Get all elements within keyboard controls and reset their styles too
+            const allKeyboardElements = keyboardControls.querySelectorAll('*');
+            allKeyboardElements.forEach(element => {
+                element.style = "";
+            });
         }
         
-        // Reset controls content
-        const controlsContent = controlsColumn.querySelector('.controls-content');
-        if (controlsContent) {
-            controlsContent.style.display = "";
-            controlsContent.style.flexDirection = "";
-            controlsContent.style.width = "";
-            controlsContent.style.padding = "";
-        }
-        
-        // Reset keyboard grid
-        const keyboardGrid = controlsColumn.querySelector('.keyboard-grid');
-        if (keyboardGrid) {
-            keyboardGrid.style.display = "";
-            keyboardGrid.style.flexDirection = "";
-        }
-        
-        // Reset key styles
-        const keys = controlsColumn.querySelectorAll('.key');
-        keys.forEach(key => {
-            key.style.width = "";
-            key.style.height = "";
-            key.style.fontSize = "";
-            key.style.flexShrink = "";
-        });
-        
-        // Reset controls row
-        const controlsRow = controlsColumn.querySelector('.controls-row');
-        if (controlsRow) {
-            controlsRow.style.display = "";
-            controlsRow.style.flexDirection = "";
-            controlsRow.style.gap = "";
-        }
-        
-        // Reset acceleration and steering controls
-        const accelerationControls = controlsColumn.querySelector('.acceleration-controls');
-        if (accelerationControls) {
-            accelerationControls.style.display = "";
-            accelerationControls.style.flexDirection = "";
-            accelerationControls.style.alignItems = "";
-            accelerationControls.style.margin = "";
-        }
-        
-        const steeringControls = controlsColumn.querySelector('.steering-controls');
-        if (steeringControls) {
-            steeringControls.style.display = "";
-            steeringControls.style.flexDirection = "";
-            steeringControls.style.alignItems = "";
-            steeringControls.style.margin = "";
-        }
-        
-        // Reset controls description
-        const controlsDescription = controlsColumn.querySelector('.controls-description');
-        if (controlsDescription) {
-            controlsDescription.style.display = "";
-        }
-        
-        // Reset wheel controls
+        // Reset wheel controls by clearing all styles
         const wheelControls = controlsColumn.querySelector('.wheel-controls');
         if (wheelControls) {
-            wheelControls.style.width = "";
-            wheelControls.style.margin = "";
-            wheelControls.style.padding = "";
-        }
-        
-        // Reset wheel and pedals content
-        const wheelAndPedalsContent = controlsColumn.querySelector('.wheel-and-pedals-content');
-        if (wheelAndPedalsContent) {
-            wheelAndPedalsContent.style.display = "";
-            wheelAndPedalsContent.style.flexDirection = "";
-            wheelAndPedalsContent.style.justifyContent = "";
-            wheelAndPedalsContent.style.alignItems = "";
-        }
-        
-        // Reset steering wheel
-        const steeringWheel = controlsColumn.querySelector('.steering-wheel');
-        if (steeringWheel) {
-            steeringWheel.style.width = "";
-            steeringWheel.style.height = "";
-            steeringWheel.style.flexShrink = "";
-        }
-        
-        // Reset pedals
-        const pedals = controlsColumn.querySelector('.pedals');
-        if (pedals) {
-            pedals.style.display = "";
-            pedals.style.flexDirection = "";
-            pedals.style.gap = "";
-        }
-        
-        // Reset drive mode container
-        const driveModeContainer = controlsColumn.querySelector('.drive-mode-container');
-        if (driveModeContainer) {
-            driveModeContainer.style.width = "";
-            driveModeContainer.style.margin = "";
-            driveModeContainer.style.flexShrink = "";
+            wheelControls.style = "";
+            
+            // Get all elements within wheel controls and reset their styles too
+            const allWheelElements = wheelControls.querySelectorAll('*');
+            allWheelElements.forEach(element => {
+                element.style = "";
+            });
         }
     }
     
     // Reset status history column styles
     if (statusHistoryColumn) {
-        statusHistoryColumn.style.position = "";
-        statusHistoryColumn.style.top = "";
-        statusHistoryColumn.style.left = "";
-        statusHistoryColumn.style.right = ""; // Make sure to reset right position
-        statusHistoryColumn.style.transform = "";
-        statusHistoryColumn.style.width = "";
-        statusHistoryColumn.style.maxHeight = "";
-        statusHistoryColumn.style.opacity = "";
-        statusHistoryColumn.style.zIndex = "";
-        statusHistoryColumn.style.overflow = "";
+        // Remove the event listeners completely
+        if (statusHistoryColumn.mouseEnterHandler) {
+            statusHistoryColumn.removeEventListener('mouseenter', statusHistoryColumn.mouseEnterHandler);
+            statusHistoryColumn.removeEventListener('mouseleave', statusHistoryColumn.mouseLeaveHandler);
+            // Clear the handlers
+            statusHistoryColumn.mouseEnterHandler = null;
+            statusHistoryColumn.mouseLeaveHandler = null;
+        }
         
-        // Reset history panel display
+        // Clear all styles completely
+        statusHistoryColumn.style = "";
+        
+        // Reset all child elements
+        const statusItems = statusHistoryColumn.querySelectorAll('*');
+        statusItems.forEach(item => {
+            item.style = "";
+        });
+        
+        // Make sure the history panel is displayed again
         const historyPanel = statusHistoryColumn.querySelector('.history-panel');
         if (historyPanel) {
             historyPanel.style.display = "";
-        }
-        
-        // Reset command log display
-        const commandLog = statusHistoryColumn.querySelector('.command-log');
-        if (commandLog) {
-            commandLog.style.display = "";
         }
     }
     
@@ -1530,8 +1406,7 @@ function exitFullscreen() {
     if (fullscreenBtn) {
         fullscreenBtn.textContent = "⛶";
         fullscreenBtn.title = "Fullscreen";
-        fullscreenBtn.style.zIndex = "";
-        fullscreenBtn.style.fontSize = "";
+        fullscreenBtn.style = "";
     }
     
     // Show the header again
@@ -1543,7 +1418,7 @@ function exitFullscreen() {
     // Force a small delay and then trigger a resize event to help layout recalculation
     setTimeout(() => {
         window.dispatchEvent(new Event('resize'));
-    }, 50);
+    }, 100);
     
     console.log("Fullscreen mode disabled");
 }
@@ -1654,7 +1529,7 @@ function setupResizeButtons() {
         setupFullscreenButton();
         setupEscapeKeyHandler();
         setupResizeButtons();
-        setupTelemetryUpdates();
+        //setupTelemetryUpdates();
     }
     
     // Also set it up on DOMContentLoaded to be safe
@@ -1662,7 +1537,7 @@ function setupResizeButtons() {
         setupFullscreenButton();
         setupEscapeKeyHandler();
         setupResizeButtons();
-        setupTelemetryUpdates();
+        //setupTelemetryUpdates();
     });
     
     // And set it up on load as a final fallback
@@ -1670,6 +1545,21 @@ function setupResizeButtons() {
         setupFullscreenButton();
         setupEscapeKeyHandler();
         setupResizeButtons();
-        setupTelemetryUpdates();
+        //setupTelemetryUpdates();
     });
 })();
+
+function setDriveMode(isForward) {
+    const toggle = document.getElementById('drive-mode-toggle');
+    if (isForward) {
+        toggle.classList.remove('drive-mode-reverse');
+        toggle.classList.add('drive-mode-forward');
+        document.querySelector('.drive-mode-indicator').style.top = '5px';
+        document.querySelector('.drive-mode-indicator').style.bottom = '';
+    } else {
+        toggle.classList.remove('drive-mode-forward');
+        toggle.classList.add('drive-mode-reverse');
+        document.querySelector('.drive-mode-indicator').style.bottom = '5px';
+        document.querySelector('.drive-mode-indicator').style.top = '';
+    }
+}

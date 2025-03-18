@@ -451,10 +451,11 @@ h1 {
 
 .wheel-and-pedals-content {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-between; /* Evenly spaced elements */
     width: 100%;
-    gap: 30px;
+    gap: 2rem; /* Consistent gap between elements */
 }
 
 .wheel-and-pedals-container img {
@@ -464,95 +465,139 @@ h1 {
 /* Pedals */
 .pedals {
     display: flex;
-    gap: 30px;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
+    gap: 2rem; /* Equal spacing between pedals and toggle */
+    flex: 1; /* Allows pedals to evenly occupy available space */
 }
 
 .pedal-box {
+    flex: 0 0 auto; /* Fixed size for pedal boxes */
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
 }
 
 .pedal {
-    width: 50px;
-    height: 120px;
-    background: #ccc;
-    border-radius: 10px;
-    overflow: hidden;
+    width: 60px;   /* Made wider for clearer visibility */
+    height: 180px; /* Made taller as requested */
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
     position: relative;
+    overflow: hidden;
 }
 
 .pedal-fill {
-    width: 100%;
-    height: 0%;
     position: absolute;
     bottom: 0;
+    width: 100%;
+    height: 0%;
     transition: height 0.1s ease-in-out;
 }
 
 /* Accelerator */
 #accelerator-fill {
-    background: #4CAF50;
+    background: var(--success-color);
 }
 
 /* Brake */
 #brake-fill {
-    background: red !important;
+    background: var(--danger-color);
 }
 
-/* Drive Mode Switch */
+/* Drive Mode Container - Make it vertical like the pedals */
 .drive-mode-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 1.5rem;
+    justify-content: center;
 }
 
-/* Labels */
+/* Vertical labels */
 .drive-mode-labels {
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    width: 120px;
-    font-size: 0.9rem;
+    height: 140px; /* Matches the toggle height */
+    font-size: 1rem;
     font-weight: bold;
-    margin-bottom: 5px;
-    padding: 0 10px;
+    text-align: center;
 }
 
-/* Drive Mode Toggle */
+/* Position Forward label at top */
+.drive-mode-labels span:first-child {
+    margin-bottom: 0.5rem;
+}
+
+/* Position Reverse label at bottom */
+.drive-mode-labels span:last-child {
+    margin-top: 0.5rem;
+}
+
+/* Vertical toggle between labels */
 .drive-mode-toggle {
-    width: 120px;
-    height: 40px;
+    width: 50px;
+    height: 160px; /* Adjusted height for better visibility */
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    border-radius: 25px;
     position: relative;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 3px;
+    margin: 5px 0;
 }
 
-/* Drive Mode Indicator */
+/* Indicator for vertical toggle */
 .drive-mode-indicator {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
     border-radius: 50%;
     position: absolute;
-    transition: transform 0.3s ease;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: top 0.3s ease;
 }
 
-/* Forward Mode */
+/* Forward Mode - position at top */
 .drive-mode-forward .drive-mode-indicator {
-    transform: translateX(0);
-    background: var(--success-color);
+    top: 5px;
 }
 
-/* Reverse Mode */
+/* Reverse Mode - position at bottom */
 .drive-mode-reverse .drive-mode-indicator {
-    transform: translateX(80px);  /* Adjusted to properly align when in reverse */
-    background: var(--danger-color);
+    bottom: 5px;
+    top: auto;
+}
+
+/* Remove any horizontal transform that might be overriding */
+.drive-mode-forward .drive-mode-indicator,
+.drive-mode-reverse .drive-mode-indicator {
+    transform: none !important;
+}
+
+/* Override any conflicting styles */
+.wheel-controls .drive-mode-container,
+.fullscreen-mode .drive-mode-container {
+    flex-direction: column !important;
+}
+
+.wheel-controls .drive-mode-toggle,
+.fullscreen-mode .drive-mode-toggle {
+    width: 40px !important;
+    height: 120px !important;
+}
+
+.wheel-controls .drive-mode-forward .drive-mode-indicator,
+.fullscreen-mode .drive-mode-forward .drive-mode-indicator {
+    top: 3px !important;
+    bottom: auto !important;
+    transform: none !important;
+}
+
+.wheel-controls .drive-mode-reverse .drive-mode-indicator,
+.fullscreen-mode .drive-mode-reverse .drive-mode-indicator {
+    top: auto !important;
+    bottom: 3px !important;
+    transform: none !important;
 }
 
 /* Status Dashboard */
@@ -678,23 +723,20 @@ h1 {
     }
 }
 
-/* Racing Wheel Controls */
+/* Racing Wheel Controls - Horizontal row layout */
 .wheel-controls {
-    margin-bottom: 2rem;  /* Add space between wheel controls and keyboard controls */
-}
-
-.wheel-and-pedals-content {
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
     align-items: center;
-    margin: 1.5rem 0;
+    justify-content: center;
+    padding: 1rem;
 }
 
+/* Steering wheel */
 .steering-wheel {
-    width: 200px;  /* Increased from 150px */
-    height: 200px;  /* Increased from 150px */
-    position: relative;
-    margin: 0 auto;
+    flex: 0 0 auto; /* Prevent resizing */
+    width: 150px;
+    height: 150px;
 }
 
 .steering-wheel img {
@@ -704,13 +746,22 @@ h1 {
     transition: transform 0.2s ease;
 }
 
+/* Pedals container - horizontal row */
 .pedals {
     display: flex;
-    gap: 2rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem; /* Equal spacing between pedals and toggle */
+    flex: 1; /* Allows pedals to evenly occupy available space */
 }
 
+/* Pedal styling */
 .pedal-box {
-    text-align: center;
+    flex: 0 0 auto; /* Fixed size for pedal boxes */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .pedal-box label {
@@ -720,12 +771,25 @@ h1 {
 }
 
 .pedal {
-    width: 40px;
-    height: 120px;
+    width: 60px;
+    height: 180px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     position: relative;
     overflow: hidden;
+}
+
+.pedal-box label {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.pedal-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .pedal-fill {
@@ -1007,19 +1071,20 @@ h1 {
 }
 
 .fullscreen-mode .video-feed.secondary {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1001;
-    width: 300px;
+    position: fixed !important;
+    top: 150px !important;
+    right: 20px !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: 1001 !important;
+    width: 300px !important;
 }
 
 .fullscreen-mode .controls-column,
 .fullscreen-mode .status-history-column {
     position: fixed;
     z-index: 1001;
-    opacity: 0.85;
+    opacity: 1;
     transition: opacity 0.3s ease;
     width: 350px;
     max-height: 90vh;
@@ -1038,9 +1103,16 @@ h1 {
 }
 
 .fullscreen-mode .status-history-column {
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: fixed !important;
+    left: 20px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    opacity: 1 !important;
+    transition: opacity 0.3s ease !important;
+    width: 350px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
 }
 
 .exit-fullscreen-btn {
@@ -1080,4 +1152,251 @@ h1 {
 .fullscreen-btn:hover {
     background: rgba(0, 0, 0, 0.7);
     border-color: var(--primary-color);
+}
+
+/* Add new styles for fullscreen mode vertical layout */
+.fullscreen-mode .drive-mode-container {
+    flex-direction: row;
+    align-items: center;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 0;
+}
+
+.fullscreen-mode .drive-mode-labels {
+    flex-direction: column;
+    height: 120px;
+    width: auto;
+    margin-bottom: 0;
+    margin-right: 10px;
+    justify-content: space-between;
+}
+
+.fullscreen-mode .drive-mode-toggle {
+    position: relative;
+    width: 50px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+}
+
+.fullscreen-mode .drive-mode-indicator {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: top 0.3s ease, bottom 0.3s ease;
+}
+
+.fullscreen-mode .drive-mode-forward .drive-mode-indicator {
+    top: 5px !important;
+    bottom: unset !important;
+}
+
+.fullscreen-mode .drive-mode-reverse .drive-mode-indicator {
+    bottom: 5px !important;
+    top: unset !important;
+}
+
+/* Adjust labels to center properly in fullscreen mode */
+.fullscreen-mode .drive-mode-container {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem;
+}
+
+.fullscreen-mode .drive-mode-container label {
+    width: 100%;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+/* Position the drive mode container next to the brake pedal in fullscreen mode */
+.fullscreen-mode .wheel-and-pedals-content {
+    position: relative;
+}
+
+.fullscreen-mode .pedals {
+    margin-right: 60px; /* Make space for the drive mode toggle */
+}
+
+.fullscreen-mode .drive-mode-container {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Fullscreen mode adjustments for racing wheel controls */
+.fullscreen-mode .control-panel.wheel-controls {
+    width: 100%;  /* Use full width to fit all elements */
+    max-width: 100vw;  /* Ensure it doesn't overflow */
+}
+
+.fullscreen-mode .wheel-and-pedals-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;  /* Evenly distribute elements */
+    align-items: center;
+    gap: 20px;  /* Space between elements */
+    width: 100%;
+}
+
+/* Ensure the drive mode container stays in the row in fullscreen mode */
+.fullscreen-mode .drive-mode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 150px;
+    position: static;
+    margin: 0;
+}
+
+/* Remove any absolute positioning that might break the layout */
+.fullscreen-mode .pedals {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+    height: 150px;
+    margin-right: 0;  /* Remove margin that was pushing elements */
+}
+
+/* Ensure the wheel maintains its size */
+.fullscreen-mode .steering-wheel {
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;  /* Prevent shrinking */
+}
+
+.control-panel.wheel-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: auto;
+}
+
+.pedals {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pedal-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.drive-mode-toggle {
+    margin: 0.5rem 0;
+}
+
+.drive-mode-forward .drive-mode-indicator {
+    top: 3px;
+}
+
+.drive-mode-reverse .drive-mode-indicator {
+    top: auto;
+    bottom: 3px;
+}
+
+/* Responsive adjustment for fullscreen */
+.fullscreen-mode .wheel-and-pedals-content {
+    justify-content: center;
+    gap: 4rem; /* Increased gap for fullscreen clarity */
+}
+
+.drive-mode-label-bottom,
+.drive-mode-label-top {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.drive-mode-label-bottom {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+.drive-mode-container .drive-mode-label-bottom {
+    margin-top: 0.5rem;
+}
+
+.drive-mode-container label {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 5px 0;
+    text-align: center;
+}
+
+.drive-mode-label-top, .drive-mode-label-bottom {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1rem; /* Updated font size */
+    text-align: center;
+    width: 100%; /* Ensures labels take full width */
+}
+
+/* Improved alignment for racing wheel controls in fullscreen mode */
+.fullscreen-mode .wheel-and-pedals-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem; /* Consistent spacing between all elements */
+    width: 100%;
+}
+
+/* Ensure all elements in the racing controls are vertically centered */
+.fullscreen-mode .steering-wheel,
+.fullscreen-mode .pedal-box,
+.fullscreen-mode .drive-mode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Fix the drive mode container positioning in fullscreen */
+.fullscreen-mode .drive-mode-container {
+    position: static; /* Remove absolute positioning */
+    transform: none; /* Remove any transform that might affect alignment */
+    height: auto; /* Let height be determined by content */
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure pedals don't have extra margin pushing the drive mode toggle out of alignment */
+.fullscreen-mode .pedals {
+    margin-right: 0;
+    gap: 3rem; /* Match the gap of the parent container */
+}
+
+/* Make sure all elements have the same vertical center point */
+.fullscreen-mode .steering-wheel,
+.fullscreen-mode .pedal,
+.fullscreen-mode .drive-mode-toggle {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* Ensure the drive mode toggle has consistent dimensions */
+.fullscreen-mode .drive-mode-toggle {
+    width: 50px;
+    height: 160px; /* Match the height of the pedals */
+}
+
+#rearCameraFeed {
+    position: absolute;  /* or 'fixed', depending on your existing styles */
+    top: 120px;          /* Increase this value to move the camera feed downward */
+    right: 20px;         /* Adjust as necessary to position horizontally */
+    z-index: 1000;       /* Ensures it stays on top */
 }
