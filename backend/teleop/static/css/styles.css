@@ -160,10 +160,10 @@ h1 {
 /* Status Grid Container */
 .status-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);  /* 2 columns */
-    gap: 1rem;
-    padding: 0.5rem;
-    overflow-y: auto;  /* Allow scrolling if needed */
+    grid-template-columns: repeat(2, 1fr); /* Adjust the number of columns */
+    gap: 10px; /* Add some spacing between items */
+    width: 100%; /* Ensure it takes full width */
+    padding: 10px; /* Add padding if needed */
 }
 
 /* Command History Container */
@@ -324,16 +324,13 @@ h1 {
 
 /* Status Items */
 .status-item {
-    background: rgba(0, 0, 0, 0.5);  /* Darker background for better contrast */
-    border-radius: 8px;
-    padding: 1rem 1.5rem; /* Ensures equal padding on left and right */
+    min-width: 150px; /* Set a minimum width */
+    background-color: rgba(0, 0, 0, 0.5); /* Ensure background is visible */
+    border-radius: 8px; /* Add some border radius */
+    padding: 10px; /* Add padding inside the item */
     display: flex;
     align-items: center;
-    gap: 1rem;
-    border: 1px solid rgba(245, 241, 241, 0.1);
-    justify-content: space-between; /* Ensures proper alignment */
-    width: calc(100% - 3rem); /* Adjust for equal padding */
-    box-sizing: border-box;
+    justify-content: space-between;
 }
 
 .status-icon {

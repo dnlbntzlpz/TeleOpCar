@@ -687,7 +687,22 @@ function enterFullscreen() {
         // First, completely remove any existing inline styles that might be interfering
         secondaryFeed.removeAttribute('style');
         
-        // Force the secondary feed to the top right with !important styles
+        // Check if we're in mobile view to apply mobile-specific sizing
+        if (isMobileDevice()) {
+            // Make rear camera 50% smaller for mobile fullscreen
+        secondaryFeed.style.cssText = `
+            position: fixed !important;
+            top: 20px !important;
+            left: auto !important;
+            right: 20px !important;
+            transform: none !important;
+                width: 150px !important; /* Reduced from 300px to 150px (50%) */
+            z-index: 9999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        `;
+        } else {
+            // Desktop view - maintain current size
         secondaryFeed.style.cssText = `
             position: fixed !important;
             top: 20px !important;
@@ -699,6 +714,7 @@ function enterFullscreen() {
             margin: 0 !important;
             padding: 0 !important;
         `;
+        }
         
         // Make sure the feed container has the correct styles
         const secondaryFeedContainer = secondaryFeed.querySelector('.feed-container');
@@ -726,10 +742,40 @@ function enterFullscreen() {
             }
         }
         
-        // Make sure the overlay is properly positioned
+        // Make sure the overlay is properly positioned and text size is appropriate for mobile
         const secondaryFeedOverlay = secondaryFeed.querySelector('.feed-overlay');
         if (secondaryFeedOverlay) {
             secondaryFeedOverlay.removeAttribute('style');
+            
+            if (isMobileDevice()) {
+                // Smaller text and padding for mobile
+                secondaryFeedOverlay.style.cssText = `
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    z-index: 1 !important;
+                    padding: 4px !important; /* Reduced padding */
+                    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%) !important;
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                `;
+                
+                // Make the label text smaller for mobile
+                const feedLabel = secondaryFeedOverlay.querySelector('.feed-label');
+                if (feedLabel) {
+                    feedLabel.style.fontSize = '0.7rem';
+                }
+                
+                // Make status text smaller for mobile
+                const feedStatus = secondaryFeedOverlay.querySelector('.feed-status');
+                if (feedStatus) {
+                    feedStatus.style.fontSize = '0.7rem';
+                }
+            } else {
+                // Regular styling for desktop
             secondaryFeedOverlay.style.cssText = `
                 position: absolute !important;
                 top: 0 !important;
@@ -743,6 +789,7 @@ function enterFullscreen() {
                 justify-content: space-between !important;
                 align-items: center !important;
             `;
+            }
         }
         
         // Try to force a reflow to ensure changes take effect
@@ -752,22 +799,50 @@ function enterFullscreen() {
         console.log("Applied forced styles to secondary feed:", secondaryFeed);
     }
     
-    // Position status history column on the right side instead of left
+    // Position status history column on the left side instead of right for mobile
     if (statusHistoryColumn) {
+        // First check if we're in mobile view
+        if (isMobileDevice()) {
         statusHistoryColumn.style.position = "fixed";
-        statusHistoryColumn.style.right = `${sideColumnMargin}px`; // Change from left to right
-        statusHistoryColumn.style.left = "auto"; // Remove left positioning
+            statusHistoryColumn.style.left = `${sideColumnMargin}px`; // Position on left
+            statusHistoryColumn.style.right = "auto"; // Clear right positioning
+            statusHistoryColumn.style.top = "10px";  // Position at top
+            statusHistoryColumn.style.transform = "none"; // Remove transform
+            statusHistoryColumn.style.width = "45%"; // Narrower width
+            statusHistoryColumn.style.maxHeight = "auto";
+            statusHistoryColumn.style.maxWidth = "300px";
+            statusHistoryColumn.style.overflowY = "auto";
+            statusHistoryColumn.style.margin = "0";
+            statusHistoryColumn.style.opacity = "0.75"; 
+            statusHistoryColumn.style.zIndex = "1002";
+            statusHistoryColumn.style.padding = "8px";
+            statusHistoryColumn.style.boxSizing = "border-box";
+            statusHistoryColumn.style.backdropFilter = "blur(5px)";
+            
+            // Try to find the secondary feed and make sure it's on the right side
+            const secondaryFeed = document.querySelector('.video-feed.secondary');
+            if (secondaryFeed) {
+                secondaryFeed.style.top = "10px";
+                secondaryFeed.style.right = "10px";
+                secondaryFeed.style.left = "auto";
+            }
+        } else {
+            // Desktop position remains on the right
+            statusHistoryColumn.style.position = "fixed";
+            statusHistoryColumn.style.right = `${sideColumnMargin}px`; 
+            statusHistoryColumn.style.left = "auto"; 
         statusHistoryColumn.style.top = "50%";
         statusHistoryColumn.style.transform = "translateY(-50%)";
         statusHistoryColumn.style.width = `${sideColumnWidth}px`;
         statusHistoryColumn.style.maxHeight = "95vh";
         statusHistoryColumn.style.overflowY = "auto";
         statusHistoryColumn.style.margin = "0";
-        statusHistoryColumn.style.opacity = "0.75"; // Changed from 0.75 to 0.25 (more transparent)
+            statusHistoryColumn.style.opacity = "0.75";
         statusHistoryColumn.style.zIndex = "1002";
         statusHistoryColumn.style.padding = "10px";
         statusHistoryColumn.style.boxSizing = "border-box";
         statusHistoryColumn.style.backdropFilter = "blur(5px)";
+        }
         
         // Store handlers so they can be removed later
         statusHistoryColumn.mouseEnterHandler = function() {
@@ -793,21 +868,65 @@ function enterFullscreen() {
             commandLog.style.display = "none";
         }
         
-        // Specifically target the vehicle status panel to make it taller and more transparent
+        // Specifically target the vehicle status panel
         const vehicleStatusPanel = statusHistoryColumn.querySelector('.status-panel');
         if (vehicleStatusPanel) {
+            if (isMobileDevice()) {
+                vehicleStatusPanel.style.minHeight = "auto";
+                vehicleStatusPanel.style.maxHeight = "90vh";
+                vehicleStatusPanel.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+                vehicleStatusPanel.style.borderRadius = "8px";
+                
+                // Remove title to save space on mobile
+                const statusTitle = vehicleStatusPanel.querySelector('h2');
+                if (statusTitle) {
+                    statusTitle.style.display = "none";
+                }
+            } else {
             vehicleStatusPanel.style.minHeight = "520px";
             vehicleStatusPanel.style.height = "auto";
-            vehicleStatusPanel.style.backgroundColor = "rgba(0, 0, 0, 0.3)"; // Match the transparency of controls
-            vehicleStatusPanel.style.borderRadius = "8px"; // Match the border radius of controls
+                vehicleStatusPanel.style.backgroundColor = "rgba(0, 0, 0, 0.3)";
+                vehicleStatusPanel.style.borderRadius = "8px";
+            }
         }
         
-        // Force single column layout for status grid with !important
+        // Mobile-specific grid layout
         const statusGrid = statusHistoryColumn.querySelector('.status-grid');
-        if (statusGrid) {
+        if (statusGrid && isMobileDevice()) {
+            statusGrid.style.cssText = "grid-template-columns: 1fr !important; width: 100%; gap: 5px; padding: 5px;";
+            
+            // Compact status items for mobile
+            const statusItems = statusGrid.querySelectorAll('.status-item');
+            statusItems.forEach(item => {
+                item.style.width = "100%";
+                item.style.boxSizing = "border-box";
+                item.style.minWidth = "0";
+                item.style.overflow = "hidden";
+                item.style.display = "flex";
+                item.style.alignItems = "center";
+                item.style.padding = "5px 8px";
+                item.style.marginBottom = "3px";
+                item.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
+                item.style.borderRadius = "6px";
+                item.style.minHeight = "28px";
+                
+                // Adjust icon and text size
+                const statusIcon = item.querySelector('.status-icon');
+                if (statusIcon) {
+                    statusIcon.style.fontSize = "0.9rem";
+                    statusIcon.style.marginRight = "8px";
+                }
+                
+                const statusValue = item.querySelector('.status-value');
+                if (statusValue) {
+                    statusValue.style.fontSize = "0.9rem";
+                }
+            });
+        } else if (statusGrid) {
+            // Desktop grid
             statusGrid.style.cssText = "grid-template-columns: 1fr !important; width: 100%; gap: 10px; padding: 5px;";
             
-            // Make sure each status item has enough space
+            // Desktop status items
             const statusItems = statusGrid.querySelectorAll('.status-item');
             statusItems.forEach(item => {
                 item.style.width = "100%";
@@ -821,15 +940,6 @@ function enterFullscreen() {
                 item.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
                 item.style.borderRadius = "6px";
             });
-        }
-        
-        // Make the panel title more compact
-        const statusTitle = vehicleStatusPanel ? vehicleStatusPanel.querySelector('h2') : null;
-        if (statusTitle) {
-            statusTitle.style.fontSize = "1rem";
-            statusTitle.style.marginBottom = "10px";
-            statusTitle.style.textAlign = "center";
-            statusTitle.style.whiteSpace = "nowrap";
         }
     }
     
@@ -1234,6 +1344,22 @@ function enterFullscreen() {
         fullscreenBtn.style.fontSize = "1.2rem";
     }
     
+    // ADD THIS SECTION: Check if we're in mobile view and hide the bottom control bar and status panel
+    if (isMobileDevice()) {
+        // Hide the controls column completely on mobile fullscreen
+        if (controlsColumn) {
+            controlsColumn.style.display = "none";
+        }
+        
+        // Hide the status history column completely on mobile fullscreen
+        if (statusHistoryColumn) {
+            statusHistoryColumn.style.display = "none";
+        }
+        
+        // Add mobile-specific touch controls if they don't exist
+        addFullscreenMobileControls();
+    }
+    
     // Hide the header
     const header = document.querySelector('.header');
     if (header) {
@@ -1241,6 +1367,87 @@ function enterFullscreen() {
     }
     
     console.log("Fullscreen mode enabled");
+}
+
+// Create this new function to add mobile fullscreen controls
+function addFullscreenMobileControls() {
+    // Only add if they don't already exist
+    if (document.getElementById('mobile-fullscreen-controls')) return;
+    
+    const container = document.querySelector('.container');
+    if (!container) return;
+    
+    // Create a floating control panel
+    const controlPanel = document.createElement('div');
+    controlPanel.id = 'mobile-fullscreen-controls';
+    controlPanel.innerHTML = `
+        <div class="mobile-fullscreen-buttons">
+            <button id="mobile-fs-stop" class="mobile-fs-btn emergency">⏹</button>
+            <button id="mobile-fs-center" class="mobile-fs-btn center">⊕</button>
+        </div>
+    `;
+    container.appendChild(controlPanel);
+    
+    // Style the floating control panel
+    controlPanel.style.position = 'fixed';
+    controlPanel.style.bottom = '20px';
+    controlPanel.style.right = '20px';
+    controlPanel.style.zIndex = '9999';
+    controlPanel.style.display = 'flex';
+    controlPanel.style.flexDirection = 'column';
+    controlPanel.style.alignItems = 'flex-end';
+    
+    // Style the buttons container
+    const buttonsContainer = controlPanel.querySelector('.mobile-fullscreen-buttons');
+    buttonsContainer.style.display = 'flex';
+    buttonsContainer.style.flexDirection = 'column';
+    buttonsContainer.style.gap = '10px';
+    
+    // Style all buttons
+    const buttons = controlPanel.querySelectorAll('.mobile-fs-btn');
+    buttons.forEach(btn => {
+        btn.style.width = '60px';
+        btn.style.height = '60px';
+        btn.style.borderRadius = '50%';
+        btn.style.border = 'none';
+        btn.style.fontSize = '28px';
+        btn.style.fontWeight = 'bold';
+        btn.style.display = 'flex';
+        btn.style.justifyContent = 'center';
+        btn.style.alignItems = 'center';
+        btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+        btn.style.opacity = '0.7';
+        btn.style.transition = 'opacity 0.2s, transform 0.2s';
+    });
+    
+    // Add hover effects
+    buttons.forEach(btn => {
+        btn.addEventListener('touchstart', () => {
+            btn.style.opacity = '1';
+            btn.style.transform = 'scale(1.1)';
+        });
+        
+        btn.addEventListener('touchend', () => {
+            btn.style.opacity = '0.7';
+            btn.style.transform = 'scale(1)';
+        });
+    });
+    
+    // Style the emergency stop button
+    const stopBtn = document.getElementById('mobile-fs-stop');
+    if (stopBtn) {
+        stopBtn.style.backgroundColor = '#e74c3c';
+        stopBtn.style.color = 'white';
+        stopBtn.addEventListener('click', () => sendCommand('stop'));
+    }
+    
+    // Style the center button
+    const centerBtn = document.getElementById('mobile-fs-center');
+    if (centerBtn) {
+        centerBtn.style.backgroundColor = '#3498db';
+        centerBtn.style.color = 'white';
+        centerBtn.addEventListener('click', () => sendCommand('center'));
+    }
 }
 
 function exitFullscreen() {
@@ -1350,6 +1557,9 @@ function exitFullscreen() {
         // Clear all styles completely
         controlsColumn.style = "";
         
+        // ADD THIS: Make sure controls are visible when exiting fullscreen
+        controlsColumn.style.display = "";
+        
         // Reset keyboard controls by clearing all styles
         const keyboardControls = controlsColumn.querySelector('.keyboard-controls');
         if (keyboardControls) {
@@ -1413,6 +1623,12 @@ function exitFullscreen() {
     const header = document.querySelector('.header');
     if (header) {
         header.style.display = '';
+    }
+    
+    // ADD THIS: Remove any fullscreen mobile controls
+    const mobileFullscreenControls = document.getElementById('mobile-fullscreen-controls');
+    if (mobileFullscreenControls) {
+        mobileFullscreenControls.remove();
     }
     
     // Force a small delay and then trigger a resize event to help layout recalculation
@@ -1481,148 +1697,430 @@ function setupResizeButtons() {
 }
 
 // Add mobile responsiveness functions
-function checkMobileView() {
-    return window.innerWidth < 768;
+function isMobileDevice() {
+    // Check for touch capability and screen size
+    return (('ontouchstart' in window) || 
+            (navigator.maxTouchPoints > 0) || 
+            (navigator.msMaxTouchPoints > 0)) && 
+           window.innerWidth < 768;
 }
 
 function setupMobileLayout() {
-    const isMobile = checkMobileView();
+    const isMobile = isMobileDevice();
     document.body.classList.toggle('mobile-view', isMobile);
     
-    // Adjust video feed layout for mobile
-    const videoFeeds = document.querySelector('.video-feeds');
-    if (videoFeeds) {
-        videoFeeds.classList.toggle('mobile-layout', isMobile);
-    }
+    // When switching between mobile and desktop views, 
+    // always clean up any lingering elements first
+    cleanupMobileElements();
     
     if (isMobile) {
-        // Force all containers to full width
-        const viewportWidth = window.innerWidth;
-        
-        // Apply to main containers
-        const mainContainers = [
-            document.querySelector('.container'),
-            document.querySelector('.main-content'),
-            document.querySelector('.video-column'),
-            document.querySelector('.controls-column'),
-            document.querySelector('.status-history-column')
-        ];
-        
-        mainContainers.forEach(container => {
-            if (container) {
-                container.style.width = '100%';
-                container.style.maxWidth = '100%';
-                container.style.margin = '0';
-                container.style.boxSizing = 'border-box';
-                container.style.textAlign = 'center';
-            }
-        });
-        
-        // Apply to video feeds
-        const feedElements = [
-            document.querySelector('.video-feeds'),
-            document.querySelectorAll('.video-feed'),
-            document.querySelectorAll('.feed-container')
-        ];
-        
-        if (feedElements[0]) {
-            feedElements[0].style.width = '100%';
-            feedElements[0].style.margin = '0';
-        }
-        
-        feedElements[1].forEach(feed => {
-            feed.style.width = '100%';
-            feed.style.margin = '0';
-        });
-        
-        feedElements[2].forEach(container => {
-            container.style.width = '100%';
-            container.style.margin = '0 auto';
-            container.style.maxWidth = 'none';
-        });
-        
-        // Apply to control panels
-        const panelElements = document.querySelectorAll('.control-panel, .status-panel, .history-panel');
-        panelElements.forEach(panel => {
-            panel.style.width = '100%';
-            panel.style.maxWidth = '100%';
-            panel.style.margin = '0 0 0.5rem 0';
-            panel.style.boxSizing = 'border-box';
-        });
-        
-        // Center control elements
-        const controlElements = [
-            document.querySelector('.keyboard-grid'),
-            document.querySelector('.controls-row'),
-            document.querySelector('.wheel-and-pedals-content')
-        ];
-        
-        controlElements.forEach(element => {
-            if (element) {
-                element.style.display = 'flex';
-                element.style.flexDirection = 'column';
-                element.style.alignItems = 'center';
-                element.style.width = '100%';
-            }
-        });
-        
-        // Center key rows
-        const keyRows = document.querySelectorAll('.key-row');
-        keyRows.forEach(row => {
-            row.style.display = 'flex';
-            row.style.justifyContent = 'center';
-            row.style.width = '100%';
-        });
-        
-        // Additional adjustments for specific elements
-        const keyboardControls = document.querySelector('.keyboard-controls');
-        const wheelControls = document.querySelector('.wheel-controls');
-        
-        if (keyboardControls) {
-            keyboardControls.style.minHeight = 'auto';
-            keyboardControls.style.width = '100%';
-        }
-        
-        if (wheelControls) {
-            wheelControls.style.minHeight = 'auto';
-            wheelControls.style.width = '100%';
-        }
-        
-        // Remove any horizontal scrolling
-        document.documentElement.style.overflowX = 'hidden';
-        document.body.style.overflowX = 'hidden';
-        
-    } else {
-        // Reset styles when not in mobile view
-        const allElements = document.querySelectorAll('.container, .main-content, .video-column, .controls-column, .status-history-column, .video-feeds, .video-feed, .feed-container, .control-panel, .status-panel, .history-panel, .keyboard-grid, .controls-row, .wheel-and-pedals-content, .key-row');
-        
-        allElements.forEach(element => {
-            if (element) {
-                element.style.width = '';
-                element.style.maxWidth = '';
-                element.style.margin = '';
-                element.style.boxSizing = '';
-                element.style.textAlign = '';
-                element.style.display = '';
-                element.style.flexDirection = '';
-                element.style.alignItems = '';
-                element.style.justifyContent = '';
-            }
-        });
-        
-        // Reset overflow
-        document.documentElement.style.overflowX = '';
-        document.body.style.overflowX = '';
+        // Apply mobile-specific optimizations
+        applyMobileOptimizations();
     }
     
-    // Make sure any fullscreen mode is exited when switching to mobile
-    if (isMobile && isFullscreen) {
-        exitFullscreen();
+    // Trigger a layout adjustment
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+    }, 100);
+}
+
+function cleanupMobileElements() {
+    // Remove any mobile-specific elements that might have been created
+    const mobileNav = document.querySelector('.mobile-nav');
+    if (mobileNav) {
+        mobileNav.remove();
+    }
+    
+    // Remove any steering indicators
+    const steerIndicator = document.getElementById('steer-indicator');
+    if (steerIndicator) {
+        steerIndicator.remove();
+    }
+    
+    // Reset styles on elements that might have been modified
+    const elements = [
+        '.main-content', '.video-column', '.controls-column', 
+        '.status-history-column', '.video-feeds', '.video-feed',
+        '.keyboard-controls', '.wheel-controls', '.key',
+        '.acceleration-button', '.steering-button'
+    ];
+    
+    elements.forEach(selector => {
+        const items = document.querySelectorAll(selector);
+        items.forEach(el => {
+            if (!isMobileDevice()) {
+                el.style = ""; // Only reset styles when going back to desktop
+            }
+        });
+    });
+    
+    // Make sure hidden elements are visible again on desktop
+    if (!isMobileDevice()) {
+        const hiddenElements = document.querySelectorAll('.controls-description, .drive-mode-container, .wheel-controls, .history-panel');
+        hiddenElements.forEach(el => {
+            el.style.display = '';
+        });
     }
 }
 
-// Add resize listener for responsive layout
-window.addEventListener('resize', setupMobileLayout);
+function applyMobileOptimizations() {
+    console.log("Applying mobile optimizations");
+    
+    // 1. Main layout structure
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.style.display = 'flex';
+        mainContent.style.flexDirection = 'column';
+        mainContent.style.alignItems = 'center';
+        mainContent.style.gap = '10px';
+        mainContent.style.padding = '10px 5px 70px 5px'; // Extra padding at bottom for mobile nav
+    }
+    
+    // 2. Video feed optimizations
+    optimizeVideoFeeds();
+    
+    // 3. Controls optimization
+    optimizeControls();
+    
+    // 4. Status panel optimization
+    optimizeStatusPanel();
+    
+    // 5. Add fixed navigation for core actions
+    addMobileNavBar();
+}
+
+function optimizeVideoFeeds() {
+    const videoColumn = document.querySelector('.video-column');
+    const videoFeeds = document.querySelector('.video-feeds');
+    const primaryFeed = document.querySelector('.video-feed.primary');
+    const secondaryFeed = document.querySelector('.video-feed.secondary');
+    
+    // Make video column full width
+    if (videoColumn) {
+        videoColumn.style.width = '100%';
+        videoColumn.style.minWidth = 'unset';
+        videoColumn.style.maxWidth = '100%';
+    }
+    
+    // Change feeds to stack vertically
+    if (videoFeeds) {
+        videoFeeds.style.flexDirection = 'column';
+        videoFeeds.style.alignItems = 'center';
+        videoFeeds.style.width = '100%';
+    }
+    
+    // Make primary feed full width
+    if (primaryFeed) {
+        primaryFeed.style.width = '100%';
+        primaryFeed.style.margin = '0';
+        
+        const feedContainer = primaryFeed.querySelector('.feed-container');
+        if (feedContainer) {
+            feedContainer.style.width = '100%';
+            feedContainer.style.maxWidth = '100%';
+            // Use aspect ratio to maintain feed proportions
+            feedContainer.style.aspectRatio = '16/9';
+            
+            // Add swipe gesture support for steering
+            addSwipeGestures(feedContainer);
+        }
+    }
+    
+    // Make secondary feed smaller
+    if (secondaryFeed) {
+        secondaryFeed.style.width = '60%';
+        secondaryFeed.style.margin = '5px auto';
+        
+        const secondaryContainer = secondaryFeed.querySelector('.feed-container');
+        if (secondaryContainer) {
+            secondaryContainer.style.width = '100%';
+            secondaryContainer.style.border = '2px solid #00a8ff';
+            secondaryContainer.style.borderRadius = '8px';
+        }
+    }
+}
+
+function optimizeControls() {
+    const controlsColumn = document.querySelector('.controls-column');
+    const keyboardControls = document.querySelector('.keyboard-controls');
+    const wheelControls = document.querySelector('.wheel-controls');
+    
+    // Full width but centered controls
+    if (controlsColumn) {
+        controlsColumn.style.width = '100%';
+        controlsColumn.style.maxWidth = '600px';
+        controlsColumn.style.margin = '0 auto';
+        controlsColumn.style.padding = '10px 5px';
+    }
+    
+    // Make all touch controls larger
+    const touchControls = document.querySelectorAll('.key, .acceleration-button, .steering-button');
+    touchControls.forEach(control => {
+        control.style.minHeight = '60px';
+        control.style.minWidth = '60px';
+        control.style.fontSize = '1.4rem';
+        control.style.borderRadius = '10px'; 
+        control.style.margin = '5px';
+    });
+    
+    // Make WASD controls even larger
+    const primaryControls = document.querySelectorAll('#keyW, #keyA, #keyS, #keyD');
+    primaryControls.forEach(key => {
+        key.style.minHeight = '75px';
+        key.style.minWidth = '75px';
+        key.style.fontSize = '1.8rem';
+        key.style.fontWeight = 'bold';
+    });
+    
+    // Hide wheel controls on mobile (too complex for small screens)
+    if (wheelControls) {
+        wheelControls.style.display = 'none';
+    }
+    
+    // Hide controls description to save space
+    const controlsDescription = document.querySelector('.controls-description');
+    if (controlsDescription) {
+        controlsDescription.style.display = 'none';
+    }
+    
+    // Center keyboard grid keys
+    if (keyboardControls) {
+        keyboardControls.style.width = '100%';
+        
+        const keyboardGrid = keyboardControls.querySelector('.keyboard-grid');
+        if (keyboardGrid) {
+            keyboardGrid.style.margin = '0 auto';
+            keyboardGrid.style.display = 'flex';
+            keyboardGrid.style.flexDirection = 'column';
+            keyboardGrid.style.alignItems = 'center';
+            
+            const keyRows = keyboardGrid.querySelectorAll('.key-row');
+        keyRows.forEach(row => {
+            row.style.display = 'flex';
+            row.style.justifyContent = 'center';
+                row.style.gap = '8px';
+            });
+        }
+        
+        // Better layout for acceleration/steering controls
+        const controlsRow = keyboardControls.querySelector('.controls-row');
+        if (controlsRow) {
+            controlsRow.style.display = 'flex';
+            controlsRow.style.flexDirection = 'row';
+            controlsRow.style.flexWrap = 'wrap';
+            controlsRow.style.justifyContent = 'center';
+            controlsRow.style.gap = '20px';
+            controlsRow.style.marginTop = '15px';
+        }
+    }
+}
+
+function optimizeStatusPanel() {
+    const statusColumn = document.querySelector('.status-history-column');
+    if (!statusColumn) return;
+    
+    statusColumn.style.width = '100%';
+    statusColumn.style.maxWidth = '600px';
+    statusColumn.style.margin = '0 auto';
+    
+    // Optimize status grid
+    const statusGrid = statusColumn.querySelector('.status-grid');
+    if (statusGrid) {
+        statusGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+        statusGrid.style.gap = '8px';
+        
+        // Make items more compact
+        const statusItems = statusGrid.querySelectorAll('.status-item');
+        statusItems.forEach(item => {
+            item.style.padding = '8px';
+        });
+    }
+    
+    // Hide history panel to save space
+    const historyPanel = statusColumn.querySelector('.history-panel');
+    if (historyPanel) {
+        historyPanel.style.display = 'none';
+    }
+}
+
+function addMobileNavBar() {
+    // Only add if it doesn't already exist
+    if (document.querySelector('.mobile-nav')) return;
+    
+    const container = document.querySelector('.container');
+    if (!container) return;
+    
+    const mobileNav = document.createElement('div');
+    mobileNav.className = 'mobile-nav';
+    mobileNav.innerHTML = `
+        <button id="mobile-emergency-stop" class="mobile-nav-btn emergency">STOP</button>
+        <button id="mobile-center" class="mobile-nav-btn center">CENTER</button>
+        <button id="mobile-toggle-history" class="mobile-nav-btn toggle">HISTORY</button>
+    `;
+    container.appendChild(mobileNav);
+    
+    // Style the nav bar
+    mobileNav.style.position = 'fixed';
+    mobileNav.style.bottom = '0';
+    mobileNav.style.left = '0';
+    mobileNav.style.width = '100%';
+    mobileNav.style.display = 'flex';
+    mobileNav.style.justifyContent = 'space-around';
+    mobileNav.style.padding = '10px';
+    mobileNav.style.backgroundColor = '#1e272e';
+    mobileNav.style.borderTop = '1px solid #444';
+    mobileNav.style.zIndex = '1000';
+    
+    // Style buttons
+    const navButtons = mobileNav.querySelectorAll('.mobile-nav-btn');
+    navButtons.forEach(button => {
+        button.style.padding = '15px';
+        button.style.fontSize = '1.2rem';
+        button.style.borderRadius = '8px';
+        button.style.width = '30%';
+        button.style.fontWeight = 'bold';
+        button.style.border = 'none';
+        button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+    });
+    
+    // Set up button styles and functionality
+    const stopBtn = document.getElementById('mobile-emergency-stop');
+    if (stopBtn) {
+        stopBtn.style.backgroundColor = '#e74c3c';
+        stopBtn.style.color = 'white';
+        stopBtn.addEventListener('click', () => sendCommand('stop'));
+    }
+    
+    const centerBtn = document.getElementById('mobile-center');
+    if (centerBtn) {
+        centerBtn.style.backgroundColor = '#3498db';
+        centerBtn.style.color = 'white';
+        centerBtn.addEventListener('click', () => sendCommand('center'));
+    }
+    
+    const historyBtn = document.getElementById('mobile-toggle-history');
+    if (historyBtn) {
+        historyBtn.style.backgroundColor = '#2c3e50';
+        historyBtn.style.color = 'white';
+        historyBtn.addEventListener('click', () => {
+            const historyPanel = document.querySelector('.history-panel');
+            if (historyPanel) {
+                const isVisible = historyPanel.style.display !== 'none';
+                historyPanel.style.display = isVisible ? 'none' : 'block';
+                historyBtn.textContent = isVisible ? 'HISTORY' : 'HIDE';
+            }
+        });
+    }
+}
+
+function addSwipeGestures(element) {
+    // Only add once
+    if (element.hasSwipeGestures) return;
+    
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let lastDirection = null;
+    let lastSteerValue = 0;
+    
+    element.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    });
+    
+    element.addEventListener('touchmove', function(e) {
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+        
+        // Calculate distance moved
+        const diffX = touchX - touchStartX;
+        const diffY = touchY - touchStartY;
+        
+        // If horizontal movement is dominant, prevent scrolling
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            e.preventDefault();
+            
+            // Calculate steering angle based on how far the swipe moved
+            const containerWidth = this.offsetWidth;
+            const steerPercent = Math.min(Math.max(diffX / (containerWidth / 2), -1), 1);
+            const steerAngle = Math.round(Math.abs(steerPercent) * selectedSteeringAngle);
+            
+            // Only send command if significant movement or direction change
+            if (Math.abs(steerPercent) > 0.05 && 
+                (Math.abs(steerPercent - lastSteerValue) > 0.05 ||
+                 (steerPercent < 0 && lastDirection !== 'left') ||
+                 (steerPercent > 0 && lastDirection !== 'right')
+                )) {
+                
+                lastSteerValue = steerPercent;
+                
+                if (steerPercent < 0) {
+                    sendCommand('left', steerAngle);
+                    lastDirection = 'left';
+    } else {
+                    sendCommand('right', steerAngle);
+                    lastDirection = 'right';
+                }
+                
+                // Show visual feedback - create or update steering indicator
+                showSteeringIndicator(element, steerPercent);
+            }
+        }
+    });
+    
+    element.addEventListener('touchend', function() {
+        // Center steering when touch ends
+        sendCommand('center');
+        lastDirection = null;
+        lastSteerValue = 0;
+        
+        // Hide or reset indicator
+        const indicator = document.getElementById('steer-indicator');
+        if (indicator) {
+            indicator.style.transform = 'translateX(0)';
+            indicator.style.opacity = '0.3';
+        }
+    });
+    
+    // Mark as having gestures
+    element.hasSwipeGestures = true;
+}
+
+function showSteeringIndicator(container, steerPercent) {
+    let indicator = document.getElementById('steer-indicator');
+    
+    // Create indicator if it doesn't exist
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'steer-indicator';
+        
+        // Style the indicator
+        indicator.style.position = 'absolute';
+        indicator.style.bottom = '20px';
+        indicator.style.left = '50%';
+        indicator.style.transform = 'translateX(0)';
+        indicator.style.width = '50px';
+        indicator.style.height = '50px';
+        indicator.style.marginLeft = '-25px'; // Center the indicator
+        indicator.style.borderRadius = '50%';
+        indicator.style.backgroundColor = 'rgba(52, 152, 219, 0.3)';
+        indicator.style.border = '2px solid #00a8ff';
+        indicator.style.zIndex = '100';
+        indicator.style.transition = 'transform 0.1s ease-out, opacity 0.2s';
+        indicator.style.opacity = '0.3';
+        
+        container.appendChild(indicator);
+    }
+    
+    // Update position and make more visible when active
+    indicator.style.transform = `translateX(${steerPercent * 100}px)`;
+    indicator.style.opacity = '0.8';
+}
+
+// Listen for orientation changes
+window.addEventListener('orientationchange', function() {
+    // Short delay to allow browser to finish rotating
+    setTimeout(setupMobileLayout, 300);
+});
 
 // Update the IIFE at the bottom of the file to include mobile setup
 (function() {
@@ -1706,3 +2204,19 @@ function setDriveMode(isForward) {
         document.querySelector('.drive-mode-indicator').style.top = '';
     }
 }
+
+// Update the layout function to account for the horizontal control bar
+function adjustLayoutForControls() {
+    const controlsHeight = document.querySelector('.controls-column').offsetHeight;
+    document.querySelector('.main-content').style.paddingBottom = `${controlsHeight + 20}px`;
+    
+    // Make sure the status column doesn't overlap with controls
+    const statusColumn = document.querySelector('.status-history-column');
+    if (statusColumn) {
+        statusColumn.style.marginBottom = `${controlsHeight + 20}px`;
+    }
+}
+
+// Call this function when the page loads and on resize
+document.addEventListener('DOMContentLoaded', adjustLayoutForControls);
+window.addEventListener('resize', adjustLayoutForControls);
