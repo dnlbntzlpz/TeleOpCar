@@ -18,9 +18,13 @@ class UltrasonicNode(Node):
         right_trigger = self.get_parameter('right_trigger_pin').value
         right_echo = self.get_parameter('right_echo_pin').value
 
-        # Initialize sensors
-        self.left_sensor = DistanceSensor(echo=left_echo, trigger=left_trigger, max_distance=2.0)
-        self.right_sensor = DistanceSensor(echo=right_echo, trigger=right_trigger, max_distance=2.0)
+        # Initialize sensors with error handling
+        try:
+            self.left_sensor = DistanceSensor(echo=left_echo, trigger=left_trigger, max_distance=2.0)
+            self.right_sensor = DistanceSensor(echo=right_echo, trigger=right_trigger, max_distance=2.0)
+        except Exception as e:
+            self.get_logger().error(f"Failed to initialize sensors: {str(e)}")
+            raise
 
         # Publishers for distances
         self.left_publisher = self.create_publisher(Float32, '/ultrasonic/left', 10)
@@ -35,15 +39,21 @@ class UltrasonicNode(Node):
         try:
             # Read distances
             left_distance = self.left_sensor.distance  # In meters
-            right_distance = self.right_sensor.distance  # In meters
-
-            # Publish distances
-            self.left_publisher.publish(Float32(data=left_distance))
-            self.right_publisher.publish(Float32(data=right_distance))
-
-            self.get_logger().info(f"Left: {left_distance:.2f}m, Right: {right_distance:.2f}m")
         except Exception as e:
-            self.get_logger().error(f"Error reading sensors: {str(e)}")
+            self.get_logger().error(f"Error reading left sensor: {str(e)}")
+            left_distance = float('inf')  # Use a default value to indicate failure
+
+        try:
+            right_distance = self.right_sensor.distance  # In meters
+        except Exception as e:
+            self.get_logger().error(f"Error reading right sensor: {str(e)}")
+            right_distance = float('inf')  # Use a default value to indicate failure
+
+        # Publish distances
+        self.left_publisher.publish(Float32(data=left_distance))
+        self.right_publisher.publish(Float32(data=right_distance))
+
+        self.get_logger().info(f"Left: {left_distance:.2f}m, Right: {right_distance:.2f}m")
 
     def destroy_node(self):
         # Cleanup resources

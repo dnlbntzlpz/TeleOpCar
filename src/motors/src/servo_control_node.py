@@ -15,9 +15,8 @@ class ServoControlNode(Node):
         self.servo = PWMOutputDevice(pwm_pin, frequency=50)  # 50Hz standard for servos
 
         # Initialize current steering angle and override state
-        self.current_angle = 90.0 # Start centered at 90
-        self.override_active = False # Flag for obstacle avoidance override
-        self.last_obstavle_angle = 90.0 # Last angle set by obstacle avoidance
+        self.current_angle = 90.0  # Start centered at 90
+        self.override_active = False  # Flag for obstacle avoidance override
 
         # Subscriber to control the servo angle
         self.create_subscription(Float32, 'servo_command', self.servo_command_callback, 10)
@@ -33,37 +32,19 @@ class ServoControlNode(Node):
             self.get_logger().info("Override active, ignoring controller command")
 
     def obstacle_command_callback(self, msg):
-        """Callback for steering commands from ovstacle avoidance"""
-        steering_value = msg.data #STeering value from obstacle avoidance (-1.0 to 1.0)
+        """Callback for steering commands from obstacle avoidance"""
+        steering_value = msg.data  # Steering value from obstacle avoidance (-1.0 to 1.0)
 
-        if steering_value != 0.0: #Obstacle detected
+        if steering_value != 0.0:  # Obstacle detected
             self.override_active = True
-            angle = 90.0 + (steering_value * 45.0) # -1 -> 45, 0 -> 90, 1 -> 135
+            angle = 90.0 + (steering_value * 45.0)  # -1 -> 45, 0 -> 90, 1 -> 135
             self.set_servo_angle(angle)
             self.get_logger().info(f"Obstacle detected, overriding to angle: {angle}")
         else:
-            #No obstacle detected, deactivate override
+            # No obstacle detected, deactivate override
             if self.override_active:
-                self.get_logger().info("No Obstacle detected, returning control to the contoller.")
+                self.get_logger().info("No obstacle detected, returning control to the controller.")
             self.override_active = False
-        
-        
-    def steering_command_callback(self, msg):
-        """Callback for assistive steering commands."""
-        steering_value = 0  # Steering value from obstacle detection (-1.0 to 1.0)
-        #steering_value = 0  # Steering value from obstacle detection (-1.0 to 1.0)
-
-
-
-        # Map steering values (-1.0, 0.0, 1.0) to servo angles (0°, angle°, 180°)
-        if steering_value < -1.0 or steering_value > 1.0:
-            self.get_logger().warn(f"Invalid steering value: {steering_value}. Must be between -1.0 and 1.0.")
-            return
-
-        # Map the steering value to an angle
-        angle = 90.0 + (steering_value * 45.0)  # -1 -> 45°, 0 -> 90°, 1 -> 135°
-        self.get_logger().warn(f"Current steering value: {steering_value}.")
-        self.set_servo_angle(angle)
 
     def set_servo_angle(self, angle):
         """

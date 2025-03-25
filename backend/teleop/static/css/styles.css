@@ -326,23 +326,31 @@ h1 {
 .status-item {
     background: rgba(0, 0, 0, 0.5);  /* Darker background for better contrast */
     border-radius: 8px;
-    padding: 1rem;
+    padding: 1rem 1.5rem; /* Ensures equal padding on left and right */
     display: flex;
     align-items: center;
     gap: 1rem;
-    border: 1px solid rgba(245, 241, 241, 0.1);  /* Updated border color */
+    border: 1px solid rgba(245, 241, 241, 0.1);
+    justify-content: space-between; /* Ensures proper alignment */
+    width: calc(100% - 3rem); /* Adjust for equal padding */
+    box-sizing: border-box;
 }
 
 .status-icon {
     font-size: 1.5rem;
-    color: #ffffff;  /* Changed to white for better visibility */
+    color: #ffffff;
+    margin-left: 1rem; /* Ensures left padding is equal */
+    flex-shrink: 0;
 }
 
 .status-info {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    color: #ffffff;  /* Changed to white for better visibility */
+    color: #ffffff; 
+    text-align: right;
+    flex-grow: 1;
+    padding-right: 1rem; /* Matching left padding */
 }
 
 .status-label {
@@ -453,9 +461,9 @@ h1 {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between; /* Evenly spaced elements */
+    justify-content: space-evenly; /* Even spacing between all elements */
     width: 100%;
-    gap: 2rem; /* Consistent gap between elements */
+    gap: 2rem; /* Consistent gap */
 }
 
 .wheel-and-pedals-container img {
@@ -473,16 +481,21 @@ h1 {
 }
 
 .pedal-box {
-    flex: 0 0 auto; /* Fixed size for pedal boxes */
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column; /* Stack label and pedal vertically */
+    align-items: center; /* Center align items */
+}
+
+.pedal-label {
+    margin-bottom: 5px; /* Space between label and pedal */
+    font-size: 1rem; /* Adjust font size as needed */
+    color: var(--text-secondary); /* Use existing color variable */
 }
 
 .pedal {
-    width: 60px;   /* Made wider for clearer visibility */
-    height: 180px; /* Made taller as requested */
-    background: rgba(255,255,255,0.1);
+    width: 60px;
+    height: 160px; /* Match toggle height */
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     position: relative;
     overflow: hidden;
@@ -511,7 +524,8 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: center; /* Center the toggle between labels */
+    height: 220px; /* Match height with other pedal boxes */
 }
 
 /* Vertical labels */
@@ -538,11 +552,11 @@ h1 {
 /* Vertical toggle between labels */
 .drive-mode-toggle {
     width: 50px;
-    height: 160px; /* Adjusted height for better visibility */
+    height: 160px; /* Match pedal height */
     background: rgba(255, 255, 255, 0.1);
     border-radius: 25px;
     position: relative;
-    margin: 5px 0;
+    margin: 0; /* Remove margin that might cause misalignment */
 }
 
 /* Indicator for vertical toggle */
@@ -552,8 +566,8 @@ h1 {
     background-color: var(--primary-color);
     border-radius: 50%;
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 5px; /* Fixed position from left edge instead of percentage */
+    transform: none; /* Remove the transform */
     transition: top 0.3s ease;
 }
 
@@ -1072,7 +1086,7 @@ h1 {
 
 .fullscreen-mode .video-feed.secondary {
     position: fixed !important;
-    top: 150px !important;
+    top: 200px !important; /* Increased from 150px to 200px (50px down) */
     right: 20px !important;
     left: auto !important;
     transform: none !important;
@@ -1104,14 +1118,14 @@ h1 {
 
 .fullscreen-mode .status-history-column {
     position: fixed !important;
-    left: 20px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    left: auto !important;
+    right: 20px !important;
+    /* Calculate position based on the rear camera feed position */
+    top: calc(200px + 168px + 10px) !important; /* Camera top (200px) + height (~168px) + margin (10px) */
+    transform: none !important;
     z-index: 1001 !important;
-    opacity: 1 !important;
-    transition: opacity 0.3s ease !important;
-    width: 350px !important;
-    max-height: 90vh !important;
+    width: 300px !important;
+    max-height: calc(100vh - 380px) !important; /* Allow space based on top position */
     overflow-y: auto !important;
 }
 
@@ -1184,12 +1198,13 @@ h1 {
 
 .fullscreen-mode .drive-mode-indicator {
     position: absolute;
-    width: 34px;
-    height: 34px;
+    width: 26px;
+    height: 26px;
+    background-color: var(--accent-color);
     border-radius: 50%;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: top 0.3s ease, bottom 0.3s ease;
+    left: 2px; /* Revert back to fixed positioning */
+    transform: none; /* Remove the transform */
+    transition: all 0.3s ease;
 }
 
 .fullscreen-mode .drive-mode-forward .drive-mode-indicator {
@@ -1394,9 +1409,465 @@ h1 {
     height: 160px; /* Match the height of the pedals */
 }
 
+/* Ensure rear camera feed positioning is consistent */
 #rearCameraFeed {
-    position: absolute;  /* or 'fixed', depending on your existing styles */
-    top: 120px;          /* Increase this value to move the camera feed downward */
-    right: 20px;         /* Adjust as necessary to position horizontally */
-    z-index: 1000;       /* Ensures it stays on top */
+    position: fixed !important; /* Use fixed instead of absolute to ensure consistent positioning */
+    top: 200px !important; /* Match exactly with video-feed.secondary top position */
+    right: 20px !important;
+    z-index: 1000 !important;
+}
+
+/* Make sure fullscreen mode respects the rear camera feed position */
+.fullscreen-mode #rearCameraFeed {
+    top: 200px !important; /* Ensure this matches .fullscreen-mode .video-feed.secondary's top value */
+}
+
+/* Keep the video feed secondary consistent */
+.fullscreen-mode .video-feed.secondary {
+    position: fixed !important;
+    top: 200px !important; /* Keep this consistent with #rearCameraFeed */
+    right: 20px !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: 1001 !important;
+    width: 300px !important;
+}
+
+/* Ensure the status panel position is calculated based on the same value */
+.fullscreen-mode .status-history-column {
+    position: fixed !important;
+    left: auto !important;
+    right: 20px !important;
+    /* Calculate position based on the rear camera feed position */
+    top: calc(200px + 168px + 10px) !important; /* Camera top (200px) + height (~168px) + margin (10px) */
+    transform: none !important;
+    z-index: 1001 !important;
+    width: 300px !important;
+    max-height: calc(100vh - 380px) !important; /* Allow space based on top position */
+    overflow-y: auto !important;
+}
+
+/* Update these styles for fullscreen status panel */
+.fullscreen-mode .status-panel {
+    margin-top: 0;
+    padding: 0.5rem;
+    min-height: auto;
+    width: 280px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    background: rgba(30, 39, 46, 0.7); /* Semi-transparent background to match camera feed */
+}
+
+.fullscreen-mode .status-panel h2.panel-title {
+    display: none; /* Hide the "Vehicle Status" title */
+}
+
+.fullscreen-mode .status-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;  /* More space between items */
+    padding: 0.1rem;
+    width: 100%;
+    margin: 0;
+    overflow-x: hidden; /* Prevent grid overflow */
+}
+
+.fullscreen-mode .status-item {
+    padding: 0.3rem;  /* Slightly larger padding */
+    min-height: 30px;  /* Taller items */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 260px;  /* Increased width to match larger panel */
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Hide status labels completely */
+.fullscreen-mode .status-label {
+    display: none;
+}
+
+.fullscreen-mode .status-info {
+    flex-grow: 1;
+    text-align: right;
+    padding-right: 0.6rem; /* Ensure right padding matches left */
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Add ellipsis for overflow text */
+}
+
+.fullscreen-mode .status-icon {
+    font-size: 1rem;  /* Larger icon size */
+    min-width: 24px;  /* More space for icons */
+    text-align: center;
+    flex-shrink: 0;
+    margin-left: 12px;  /* More left margin */
+    margin-right: 10px;  /* More separation */
+}
+
+.fullscreen-mode .status-value {
+    font-size: 1rem;  /* Larger font size */
+    line-height: 1.2;
+    max-width: 180px;  /* Adjust to maintain balance */
+    text-overflow: ellipsis;
+    margin-right: 12px;
+    text-align: right;
+    flex-grow: 1;
+}
+
+/* Make sure the "No Gamepad Detected" text wraps properly */
+.fullscreen-mode .status-value.disconnected {
+    font-size: 0.9rem;  /* Larger font for better readability */
+    color: var(--danger-color);
+    white-space: normal;
+    word-break: break-word;
+    text-align: right;
+    width: 150px;  /* More width for text */
+    overflow-wrap: break-word;
+}
+
+/* Adjust the status history column */
+.fullscreen-mode .status-history-column {
+    width: 300px !important;  /* Increased significantly from 240px */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+.fullscreen-mode .wheel-and-pedals-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fullscreen-mode .drive-mode-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 10px;
+    height: 100%; /* Match container height */
+}
+
+.fullscreen-mode .drive-mode-toggle {
+    width: 30px; /* Match pedal width */
+    height: 80px; /* Match pedal height */
+    background-color: rgba(30, 30, 30, 0.8);
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.3s ease;
+    margin: 0 5px;
+}
+
+.fullscreen-mode .drive-mode-indicator {
+    width: 26px; /* Slightly smaller than toggle width */
+    height: 26px; /* Height for the circular indicator */
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    position: absolute;
+    left: 2px; /* Revert back to fixed positioning */
+    transform: none; /* Remove the transform */
+    transition: all 0.3s ease;
+}
+
+.fullscreen-mode .drive-mode-forward .drive-mode-indicator {
+    top: 5px;
+}
+
+.fullscreen-mode .drive-mode-reverse .drive-mode-indicator {
+    bottom: 5px;
+}
+
+.fullscreen-mode .drive-mode-label-top,
+.fullscreen-mode .drive-mode-label-bottom {
+    font-size: 0.8rem;
+    margin: 5px 0;
+    color: var(--text-secondary);
+}
+
+/* Also update the regular (non-fullscreen) indicator for consistency */
+.drive-mode-indicator {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    position: absolute;
+    left: 5px; /* Fixed position from left edge instead of percentage */
+    transform: none; /* Remove the transform */
+    transition: top 0.3s ease;
+}
+
+/* Override any transformations in existing selectors */
+.drive-mode-forward .drive-mode-indicator,
+.drive-mode-reverse .drive-mode-indicator,
+.fullscreen-mode .drive-mode-forward .drive-mode-indicator,
+.fullscreen-mode .drive-mode-reverse .drive-mode-indicator {
+    transform: none !important; /* Ensure no transform is applied */
+}
+
+/* Update the status item styles for better centering */
+.fullscreen-mode .status-item {
+    padding: 0.3rem;  /* Slightly larger padding */
+    min-height: 30px;  /* Taller items */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 260px;  /* Increased width to match larger panel */
+    margin: 0 auto;  /* This centers the item in its container */
+    box-sizing: border-box;
+}
+
+/* Ensure icon has consistent spacing */
+.fullscreen-mode .status-icon {
+    font-size: 1rem;  /* Larger icon size */
+    min-width: 24px;  /* More space for icons */
+    text-align: center;
+    flex-shrink: 0;
+    margin-left: 12px;  /* More left margin */
+    margin-right: 10px;  /* More separation */
+}
+
+/* Ensure status value has consistent spacing */
+.fullscreen-mode .status-value {
+    font-size: 1rem;  /* Larger font size */
+    line-height: 1.2;
+    max-width: 180px;  /* Adjust to maintain balance */
+    text-overflow: ellipsis;
+    margin-right: 12px;  /* Fixed right margin */
+    text-align: right;
+    flex-grow: 1;
+}
+
+/* Ensure the status grid itself is centered */
+.fullscreen-mode .status-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;  /* More space between items */
+    padding: 0.1rem;
+    width: 100%;
+    margin: 0 auto;  /* Center the grid */
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;  /* Center child items */
+}
+
+/* Make sure the status panel width accommodates centered items */
+.fullscreen-mode .status-panel {
+    padding: 0.6rem;
+    min-height: auto;
+    width: 280px;  /* Increased width significantly from 220px */
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;  /* Keep centering */
+}
+
+/* Hide the history panel in fullscreen mode to focus on status */
+.fullscreen-mode .history-panel {
+    display: none !important;
+}
+
+/* Increase max height of status column to show all icons */
+.fullscreen-mode .status-history-column {
+    max-height: 70vh !important; /* Increased from 45vh to ensure all items are visible */
+    top: 420px !important; /* Position a bit higher than before to allow for more space below */
+}
+
+/* Reduce gap between status items to fit more in view */
+.fullscreen-mode .status-grid {
+    gap: 0.4rem; /* Slightly tighter spacing between items */
+}
+
+/* Make each status item a bit more compact */
+.fullscreen-mode .status-item {
+    min-height: 28px; /* Slightly reduced height */
+    padding: 0.25rem 0.3rem; /* Slightly reduced padding */
+}
+
+/* Ensure the status panel has a minimum height to accommodate all items */
+.fullscreen-mode .status-panel {
+    min-height: 350px; /* Ensure enough height for all items */
+    max-height: 70vh; /* Allow it to grow but cap at 70% of viewport height */
+}
+
+/* Add a subtle scrollbar for when all icons still don't fit */
+.fullscreen-mode .status-grid::-webkit-scrollbar {
+    width: 5px;
+}
+
+.fullscreen-mode .status-grid::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+
+.fullscreen-mode .status-grid::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 5px;
+}
+
+/* Enable scrolling for the grid if needed */
+.fullscreen-mode .status-grid {
+    overflow-y: auto;
+    max-height: 65vh;
+}
+
+/* Add this to your CSS file - Mobile responsive styles */
+
+/* Base mobile view class */
+.mobile-view .main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    width: 100%;
+}
+
+.mobile-view .container {
+    padding: 0.5rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mobile-view .video-column,
+.mobile-view .controls-column,
+.mobile-view .status-history-column {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mobile-view .video-feeds {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.mobile-view .video-feed {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.mobile-view .control-panel,
+.mobile-view .status-panel,
+.mobile-view .history-panel {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+/* Fix for controls on mobile */
+.mobile-view .keyboard-grid,
+.mobile-view .controls-row,
+.mobile-view .controls-description {
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+}
+
+.mobile-view .keyboard-controls-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.mobile-view .controls-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.mobile-view .wheel-and-pedals-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.mobile-view .acceleration-controls,
+.mobile-view .steering-controls {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Status panel fixes for mobile */
+.mobile-view .status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+    gap: 0.5rem;
+    padding: 0.5rem;
+}
+
+@media (max-width: 480px) {
+    .mobile-view .status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Full width containers for mobile */
+.mobile-view .container,
+.mobile-view .main-content,
+.mobile-view .video-column,
+.mobile-view .controls-column,
+.mobile-view .status-history-column {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure feed containers use full width */
+.mobile-view .video-feeds,
+.mobile-view .video-feed,
+.mobile-view .feed-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Ensure content panels are full width */
+.mobile-view .control-panel,
+.mobile-view .status-panel,
+.mobile-view .history-panel,
+.mobile-view .wheel-controls,
+.mobile-view .keyboard-controls {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Center control elements within full-width containers */
+.mobile-view .keyboard-grid,
+.mobile-view .controls-row,
+.mobile-view .wheel-and-pedals-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+/* Key rows should be centered */
+.mobile-view .key-row {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
 }

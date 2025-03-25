@@ -1480,7 +1480,151 @@ function setupResizeButtons() {
     });
 }
 
-// Update the IIFE at the bottom of the file to include the resize buttons setup and telemetry updates
+// Add mobile responsiveness functions
+function checkMobileView() {
+    return window.innerWidth < 768;
+}
+
+function setupMobileLayout() {
+    const isMobile = checkMobileView();
+    document.body.classList.toggle('mobile-view', isMobile);
+    
+    // Adjust video feed layout for mobile
+    const videoFeeds = document.querySelector('.video-feeds');
+    if (videoFeeds) {
+        videoFeeds.classList.toggle('mobile-layout', isMobile);
+    }
+    
+    if (isMobile) {
+        // Force all containers to full width
+        const viewportWidth = window.innerWidth;
+        
+        // Apply to main containers
+        const mainContainers = [
+            document.querySelector('.container'),
+            document.querySelector('.main-content'),
+            document.querySelector('.video-column'),
+            document.querySelector('.controls-column'),
+            document.querySelector('.status-history-column')
+        ];
+        
+        mainContainers.forEach(container => {
+            if (container) {
+                container.style.width = '100%';
+                container.style.maxWidth = '100%';
+                container.style.margin = '0';
+                container.style.boxSizing = 'border-box';
+                container.style.textAlign = 'center';
+            }
+        });
+        
+        // Apply to video feeds
+        const feedElements = [
+            document.querySelector('.video-feeds'),
+            document.querySelectorAll('.video-feed'),
+            document.querySelectorAll('.feed-container')
+        ];
+        
+        if (feedElements[0]) {
+            feedElements[0].style.width = '100%';
+            feedElements[0].style.margin = '0';
+        }
+        
+        feedElements[1].forEach(feed => {
+            feed.style.width = '100%';
+            feed.style.margin = '0';
+        });
+        
+        feedElements[2].forEach(container => {
+            container.style.width = '100%';
+            container.style.margin = '0 auto';
+            container.style.maxWidth = 'none';
+        });
+        
+        // Apply to control panels
+        const panelElements = document.querySelectorAll('.control-panel, .status-panel, .history-panel');
+        panelElements.forEach(panel => {
+            panel.style.width = '100%';
+            panel.style.maxWidth = '100%';
+            panel.style.margin = '0 0 0.5rem 0';
+            panel.style.boxSizing = 'border-box';
+        });
+        
+        // Center control elements
+        const controlElements = [
+            document.querySelector('.keyboard-grid'),
+            document.querySelector('.controls-row'),
+            document.querySelector('.wheel-and-pedals-content')
+        ];
+        
+        controlElements.forEach(element => {
+            if (element) {
+                element.style.display = 'flex';
+                element.style.flexDirection = 'column';
+                element.style.alignItems = 'center';
+                element.style.width = '100%';
+            }
+        });
+        
+        // Center key rows
+        const keyRows = document.querySelectorAll('.key-row');
+        keyRows.forEach(row => {
+            row.style.display = 'flex';
+            row.style.justifyContent = 'center';
+            row.style.width = '100%';
+        });
+        
+        // Additional adjustments for specific elements
+        const keyboardControls = document.querySelector('.keyboard-controls');
+        const wheelControls = document.querySelector('.wheel-controls');
+        
+        if (keyboardControls) {
+            keyboardControls.style.minHeight = 'auto';
+            keyboardControls.style.width = '100%';
+        }
+        
+        if (wheelControls) {
+            wheelControls.style.minHeight = 'auto';
+            wheelControls.style.width = '100%';
+        }
+        
+        // Remove any horizontal scrolling
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+        
+    } else {
+        // Reset styles when not in mobile view
+        const allElements = document.querySelectorAll('.container, .main-content, .video-column, .controls-column, .status-history-column, .video-feeds, .video-feed, .feed-container, .control-panel, .status-panel, .history-panel, .keyboard-grid, .controls-row, .wheel-and-pedals-content, .key-row');
+        
+        allElements.forEach(element => {
+            if (element) {
+                element.style.width = '';
+                element.style.maxWidth = '';
+                element.style.margin = '';
+                element.style.boxSizing = '';
+                element.style.textAlign = '';
+                element.style.display = '';
+                element.style.flexDirection = '';
+                element.style.alignItems = '';
+                element.style.justifyContent = '';
+            }
+        });
+        
+        // Reset overflow
+        document.documentElement.style.overflowX = '';
+        document.body.style.overflowX = '';
+    }
+    
+    // Make sure any fullscreen mode is exited when switching to mobile
+    if (isMobile && isFullscreen) {
+        exitFullscreen();
+    }
+}
+
+// Add resize listener for responsive layout
+window.addEventListener('resize', setupMobileLayout);
+
+// Update the IIFE at the bottom of the file to include mobile setup
 (function() {
     // Function to set up the fullscreen button
     function setupFullscreenButton() {
@@ -1524,28 +1668,27 @@ function setupResizeButtons() {
         });
     }
     
-    // Try to set up the button immediately if the DOM is already loaded
-    if (document.readyState === "complete" || document.readyState === "interactive") {
+    // Add mobile setup function to the initialization
+    function initializeLayout() {
         setupFullscreenButton();
         setupEscapeKeyHandler();
         setupResizeButtons();
-        //setupTelemetryUpdates();
+        setupMobileLayout(); // Initialize mobile layout
+    }
+    
+    // Try to set up the layout immediately if the DOM is already loaded
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        initializeLayout();
     }
     
     // Also set it up on DOMContentLoaded to be safe
     document.addEventListener('DOMContentLoaded', function() {
-        setupFullscreenButton();
-        setupEscapeKeyHandler();
-        setupResizeButtons();
-        //setupTelemetryUpdates();
+        initializeLayout();
     });
     
     // And set it up on load as a final fallback
     window.addEventListener('load', function() {
-        setupFullscreenButton();
-        setupEscapeKeyHandler();
-        setupResizeButtons();
-        //setupTelemetryUpdates();
+        initializeLayout();
     });
 })();
 

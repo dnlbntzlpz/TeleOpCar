@@ -48,8 +48,9 @@ class BrakeManagerNode(Node):
                 self.last_publish_time = current_time
                 self.last_update_time = current_time  # Update last update time
 
-        # Log incoming values for debugging
-        self.get_logger().info(f"WebSocket Brake: {self.websocket_brake}, Obstacle Brake: {self.obstacle_brake}")
+        # Log incoming values for debugging only if they change
+        if self.websocket_brake != self.last_final_brake or self.obstacle_brake != self.last_final_brake:
+            self.get_logger().debug(f"WebSocket Brake: {self.websocket_brake}, Obstacle Brake: {self.obstacle_brake}")
 
 def main(args=None):
     rclpy.init(args=args)

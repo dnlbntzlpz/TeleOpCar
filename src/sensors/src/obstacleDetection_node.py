@@ -2,9 +2,15 @@ import rclpy
 from rclpy.node import Node
 import lgpio
 import time
+import math
 from std_msgs.msg import Float32
+from collections import deque
+import threading
+from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor
 
 class ObstacleDetectionNode(Node):
+    SPEED_OF_SOUND_HALF = 34300 / 2 / 100.0  # Pre-compute (m/s), conversion factor
+
     def __init__(self):
         super().__init__('obstacle_detection_node')
 
@@ -30,6 +36,10 @@ class ObstacleDetectionNode(Node):
         lgpio.gpio_claim_output(self.chip, self.right_trigger)
         lgpio.gpio_claim_input(self.chip, self.right_echo)
 
+        # Validate GPIO setup
+        self.validate_gpio(self.left_echo, "left echo")
+        self.validate_gpio(self.right_echo, "right echo")
+
         # Publishers for control commands with smaller queue size
         self.brake_publisher = self.create_publisher(Float32, '/brake_command_obs', 1)
         self.left_distance_publisher = self.create_publisher(Float32, '/obstacle_distance_left', 1)
@@ -43,65 +53,121 @@ class ObstacleDetectionNode(Node):
         # Timer to periodically read distances with lower frequency
         self.timer = self.create_timer(0.2, self.check_obstacles)  # 5 Hz
 
-        # Add history for distance readings
-        self.left_distance_history = [float('inf')] * 5  # Increase history size for smoothing
-        self.right_distance_history = [float('inf')] * 5  # Increase history size for smoothing
+        # Add a lock for thread-safe GPIO operations
+        self.gpio_lock = threading.Lock()
+
+        # Add history for distance readings using deque for better performance
+        initial_distance = 4.0  # or any default "safe" starting value
+        self.left_distance_history = deque([initial_distance] * 5, maxlen=5)
+        self.right_distance_history = deque([initial_distance] * 5, maxlen=5)
+        self.left_distance_sum = initial_distance * 5
+        self.right_distance_sum = initial_distance * 5
+
+        # Initialize ThreadPoolExecutor
+        self.thread_pool = ThreadPoolExecutor(max_workers=2)  # Renamed to avoid conflict
 
         self.get_logger().info("Obstacle Detection Node Initialized")
+
+    def validate_gpio(self, pin, name):
+        """Validate GPIO setup by checking if the pin can be read."""
+        try:
+            value = lgpio.gpio_read(self.chip, pin)
+            if value not in (0, 1):
+                self.get_logger().error(f"Failed to read {name} GPIO. Check wiring.")
+        except Exception as e:
+            self.get_logger().error(f"Error reading {name} GPIO: {str(e)}")
 
     def motor_speed_callback(self, msg):
         """Callback to update the current motor speed."""
         self.motor_speed = msg.data
 
     def get_distance(self, trigger, echo):
-        """Measures distance using an ultrasonic sensor with timeout"""
-        MAX_TIMEOUT = 0.1  # 100ms timeout
-        
-        lgpio.gpio_write(self.chip, trigger, 1)
-        time.sleep(0.00001)
-        lgpio.gpio_write(self.chip, trigger, 0)
+        MAX_TIMEOUT = 0.1
 
-        start_time = time.time()
-        timeout_start = start_time
+        # Use a lock to ensure thread-safe access to GPIO
+        with self.gpio_lock:
+            lgpio.gpio_write(self.chip, trigger, 1)
+            time.sleep(0.00001)
+            lgpio.gpio_write(self.chip, trigger, 0)
 
-        # Wait for echo to go high with timeout
-        while lgpio.gpio_read(self.chip, echo) == 0:
-            start_time = time.time()
-            if time.time() - timeout_start > MAX_TIMEOUT:
-                return float('inf')  # Return infinite distance on timeout
+            timeout_start = time.monotonic()
+            start_time = None
 
-        timeout_start = time.time()
-        # Wait for echo to go low with timeout
-        while lgpio.gpio_read(self.chip, echo) == 1:
-            if time.time() - timeout_start > MAX_TIMEOUT:
-                return float('inf')  # Return infinite distance on timeout
-            stop_time = time.time()
+            while lgpio.gpio_read(self.chip, echo) == 0:
+                if time.monotonic() - timeout_start > MAX_TIMEOUT:
+                    return float('inf')
+                start_time = time.monotonic()
+
+            timeout_start = time.monotonic()
+            stop_time = None
+
+            while lgpio.gpio_read(self.chip, echo) == 1:
+                if time.monotonic() - timeout_start > MAX_TIMEOUT:
+                    return float('inf')
+                stop_time = time.monotonic()
+
+        # Safety check
+        if start_time is None or stop_time is None:
+            return float('inf')
 
         elapsed_time = stop_time - start_time
-        distance = (elapsed_time * 34300) / 2  # Convert to cm
-        return min(distance / 100.0, 4.0)  # Convert to meters, cap at 4 meters
+        distance = elapsed_time * self.SPEED_OF_SOUND_HALF
+
+        self.get_logger().debug(f"Distance: {distance}m (elapsed: {elapsed_time}s)")
+
+        return min(distance, 4.0)
 
     def is_obstacle_detected(self, current_distance):
         """Check if an obstacle is detected immediately"""
         return current_distance < self.obstacle_threshold
 
-    def get_smoothed_distance(self, distance_history, new_distance):
-        """Update the distance history and return the smoothed distance."""
-        distance_history.pop(0)  # Remove the oldest reading
-        distance_history.append(new_distance)  # Add the new reading
-        return sum(distance_history) / len(distance_history)  # Return the average
+    def get_smoothed_distance(self, distance_history, distance_sum, new_distance):
+        """Update the distance history and return the smoothed distance more efficiently."""
+        # Ignore invalid readings
+        if math.isinf(new_distance):
+            return distance_sum / len(distance_history), distance_sum
+
+        # Remove the oldest value from the sum
+        old_value = distance_history[0]
+        updated_sum = distance_sum - old_value + new_distance
+        
+        # Update the history (deque will handle removal automatically)
+        distance_history.append(new_distance)
+        
+        # Return the average
+        return updated_sum / len(distance_history), updated_sum
 
     def check_obstacles(self):
         try:
-            # Read distances with small delay between readings
-            left_distance = self.get_distance(self.left_trigger, self.left_echo)
-            time.sleep(0.01)  # Small delay between readings
-            right_distance = self.get_distance(self.right_trigger, self.right_echo)
+            # Use ThreadPoolExecutor to read sensors in parallel
+            left_future = self.thread_pool.submit(self.get_distance, self.left_trigger, self.left_echo)
+            right_future = self.thread_pool.submit(self.get_distance, self.right_trigger, self.right_echo)
 
-            # Smooth the distances
-            smoothed_left_distance = self.get_smoothed_distance(self.left_distance_history, left_distance)
-            smoothed_right_distance = self.get_smoothed_distance(self.right_distance_history, right_distance)
+            left_distance = left_future.result()
+            right_distance = right_future.result()
 
+            # Smooth the distances and update the sums
+            smoothed_left_distance, self.left_distance_sum = self.get_smoothed_distance(
+                self.left_distance_history, 
+                self.left_distance_sum, 
+                left_distance
+            )
+            
+            smoothed_right_distance, self.right_distance_sum = self.get_smoothed_distance(
+                self.right_distance_history,
+                self.right_distance_sum,
+                right_distance
+            )
+            
+            # Check for NaN values and replace with a safe value
+            if math.isnan(smoothed_left_distance):
+                smoothed_left_distance = float('inf')
+                self.get_logger().warn("NaN detected for left sensor, replacing with infinity")
+                
+            if math.isnan(smoothed_right_distance):
+                smoothed_right_distance = float('inf')
+                self.get_logger().warn("NaN detected for right sensor, replacing with infinity")
+            
             # Initialize commands
             brake_value = 0.0  # Default: no brake
             steering_value = 0.0  # Centered steering
@@ -140,6 +206,7 @@ class ObstacleDetectionNode(Node):
 
     def destroy_node(self):
         # Cleanup resources
+        self.thread_pool.shutdown(wait=True)  # Ensure all threads are finished
         lgpio.gpiochip_close(self.chip)
         super().destroy_node()
 
