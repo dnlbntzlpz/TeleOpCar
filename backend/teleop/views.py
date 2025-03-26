@@ -2,12 +2,19 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .ros_interface import ROS2Interface
 import rclpy
+from django.http import StreamingHttpResponse
+from .threaded_camera import ThreadedCamera
+import time
 
 # Ensure rclpy is initialized only once
 if not rclpy.ok():
     rclpy.init()
 
 ros2_interface = ROS2Interface()
+
+# Initialize cameras
+camera_1 = ThreadedCamera(camera_index=0)
+camera_2 = ThreadedCamera(camera_index=2)
 
 def index(request):
     return render(request, 'teleop/index.html')
@@ -61,55 +68,43 @@ def send_controller_command(request):
 # Video Stuff
 import cv2
 import time
-from django.http import StreamingHttpResponse
-
-# Global camera instances
-camera_1 = cv2.VideoCapture(0, cv2.CAP_V4L2)  # /dev/video0
-camera_1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # Force MJPEG
-camera_1.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffering
-
-camera_2 = cv2.VideoCapture(2, cv2.CAP_V4L2)  # /dev/video2
-camera_2.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # Force MJPEG
-camera_2.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffering
-
-def generate_frames(camera, frame_rate=10):
-    """Yields frames from the given camera as an MJPEG stream."""
-    interval = 1 / frame_rate
-    while True:
-        start_time = time.time()
-
-        if not camera.isOpened():
-            print("Error: Camera not opened.")
-            break
-
-        success, frame = camera.read()
-        if not success:
-            print("Error: Failed to capture frame.")
-            time.sleep(interval)  # Wait before retrying
-            continue
-
-        frame = cv2.resize(frame, (640, 480))
-        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
-
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-
-        elapsed_time = time.time() - start_time
-        if elapsed_time < interval:
-            time.sleep(interval - elapsed_time)
 
 def video_feed_1(request):
-    """Video feed for Camera 1 (/dev/video0)."""
-    return StreamingHttpResponse(generate_frames(camera_1), content_type='multipart/x-mixed-replace; boundary=frame')
+    def generate():
+        while True:
+            frame = camera_1.get_frame()
+            if frame:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            else:
+                time.sleep(0.01)  # Short sleep if no frame
+
+    response = StreamingHttpResponse(generate(), content_type='multipart/x-mixed-replace; boundary=frame')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
 
 def video_feed_2(request):
-    """Video feed for Camera 2 (/dev/video2)."""
-    return StreamingHttpResponse(generate_frames(camera_2), content_type='multipart/x-mixed-replace; boundary=frame')
+    def generate():
+        while True:
+            frame = camera_2.get_frame()
+            if frame:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            else:
+                time.sleep(0.01)  # Short sleep if no frame
+
+    response = StreamingHttpResponse(generate(), content_type='multipart/x-mixed-replace; boundary=frame')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
 
 def cleanup():
     """Release camera resources on shutdown."""
-    camera_1.release()
-    camera_2.release()
+    camera_1.stop()
+    camera_2.stop()
 
 # Telemetry Stuff
 import random
