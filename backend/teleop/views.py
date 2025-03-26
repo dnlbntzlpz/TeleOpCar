@@ -71,13 +71,41 @@ import time
 
 def video_feed_1(request):
     def generate():
+        frame_count = 0
+        start_time = time.time()
+        target_fps = 15  # Set your desired frame rate here
+        frame_time = 1.0 / target_fps
+        
         while True:
-            frame = camera_1.get_frame()
-            if frame:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            else:
-                time.sleep(0.01)  # Short sleep if no frame
+            try:
+                loop_start = time.time()
+                
+                frame = camera_1.get_frame()
+                if frame:
+                    frame_count += 1
+                    # Print diagnostics every 50 frames
+                    if frame_count % 50 == 0:
+                        elapsed = time.time() - start_time
+                        #print(f"Camera 1: {frame_count/elapsed:.2f} FPS, frame size: {len(frame)} bytes")
+                    
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                else:
+                    print("Camera 1: No frame received")
+                    time.sleep(0.01)  # Short sleep if no frame
+                    continue  # Skip the rate limiting for this iteration
+                
+                # Calculate time spent in this iteration
+                processing_time = time.time() - loop_start
+                
+                # Sleep to maintain desired frame rate
+                sleep_time = max(0, frame_time - processing_time)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                    
+            except Exception as e:
+                print(f"Camera 1 error: {str(e)}")
+                time.sleep(0.1)  # Longer sleep on error
 
     response = StreamingHttpResponse(generate(), content_type='multipart/x-mixed-replace; boundary=frame')
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
@@ -87,13 +115,41 @@ def video_feed_1(request):
 
 def video_feed_2(request):
     def generate():
+        frame_count = 0
+        start_time = time.time()
+        target_fps = 15  # Set your desired frame rate here
+        frame_time = 1.0 / target_fps
+        
         while True:
-            frame = camera_2.get_frame()
-            if frame:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            else:
-                time.sleep(0.01)  # Short sleep if no frame
+            try:
+                loop_start = time.time()
+                
+                frame = camera_2.get_frame()
+                if frame:
+                    frame_count += 1
+                    # Print diagnostics every 50 frames
+                    if frame_count % 50 == 0:
+                        elapsed = time.time() - start_time
+                        #print(f"Camera 2: {frame_count/elapsed:.2f} FPS, frame size: {len(frame)} bytes")
+                    
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                else:
+                    print("Camera 2: No frame received")
+                    time.sleep(0.01)  # Short sleep if no frame
+                    continue  # Skip the rate limiting for this iteration
+                
+                # Calculate time spent in this iteration
+                processing_time = time.time() - loop_start
+                
+                # Sleep to maintain desired frame rate
+                sleep_time = max(0, frame_time - processing_time)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                    
+            except Exception as e:
+                print(f"Camera 2 error: {str(e)}")
+                time.sleep(0.1)  # Longer sleep on error
 
     response = StreamingHttpResponse(generate(), content_type='multipart/x-mixed-replace; boundary=frame')
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'

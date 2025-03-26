@@ -1,6 +1,9 @@
 import cv2
 import threading
 import time
+from turbojpeg import TurboJPEG
+
+jpeg = TurboJPEG()
 
 class ThreadedCamera:
     def __init__(self, camera_index):
@@ -21,30 +24,38 @@ class ThreadedCamera:
         self.thread.start()
 
     def update_frame(self):
+        target_fps = 15  # Set your desired capture frame rate
+        frame_time = 1.0 / target_fps
+        
         while self.running:
-            if not self.camera.isOpened():
-                print(f"Error: Camera not opened")
-                time.sleep(0.1)
-                continue
+            loop_start = time.time()
             
-            success, frame = self.camera.read()
-            if success:
-                # Directly encode the frame without resizing
-                _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 30])
-                
-                with self.lock:
-                    self.latest_frame = buffer.tobytes()
+            if self.camera.isOpened():
+                self.camera.grab()  # Discard stale frame
+                success, frame = self.camera.read()
+                if success:
+                    with self.lock:
+                        self.latest_frame = frame
             
-            # Small sleep to prevent CPU overload
-            time.sleep(0.01)
+            # Calculate time spent in this iteration
+            processing_time = time.time() - loop_start
+            
+            # Sleep to maintain desired frame rate
+            sleep_time = max(0, frame_time - processing_time)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            else:
+                # If we're running behind, give the system a tiny breather
+                time.sleep(0.001)
 
     def get_frame(self):
         with self.lock:
-            return self.latest_frame
+            if self.latest_frame is not None:
+                return jpeg.encode(self.latest_frame, quality=30)
+            return None
 
     def stop(self):
         self.running = False
         if self.thread.is_alive():
             self.thread.join(timeout=1.0)
-        if self.camera.isOpened():
-            self.camera.release()
+        self.camera.release()
