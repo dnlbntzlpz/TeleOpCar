@@ -117,7 +117,7 @@ function setSteeringAngle(angle) {
 document.addEventListener('keydown', (e) => {
     switch (e.key.toLowerCase()) {
         case 'w': sendCommand('forward', selectedAcceleration); updateKeyDisplay('W', true); break;
-        case 's': sendCommand('backward', selectedAcceleration); updateKeyDisplay('S', true); break;
+        case 's': sendCommand('backward', -selectedAcceleration); updateKeyDisplay('S', true); break;
         case 'a': sendCommand('left', selectedSteeringAngle); updateKeyDisplay('A', true); break;
         case 'd': sendCommand('right', selectedSteeringAngle); updateKeyDisplay('D', true); break;
         case 'x': sendCommand('stop'); break;
