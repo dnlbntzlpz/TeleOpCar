@@ -62,12 +62,15 @@ class MotorControlNode(Node):
             self.left_pwm.value = 0.0
             self.right_pwm.value = 0.0
             self.get_logger().info("Brake activated: Motors stopped.")
-
         else:
             speed = abs(self.accelerator)  # Get absolute speed value
             is_forward = self.direction  # Determine direction
             print(f"Direction: {'forward' if is_forward else 'reverse'}")
             
+            # Adjust speed for reverse
+            if not is_forward:
+                speed = 1.0 - speed  # Invert speed for reverse
+
             # Set motor speed
             self.left_pwm.value = speed
             self.right_pwm.value = speed
