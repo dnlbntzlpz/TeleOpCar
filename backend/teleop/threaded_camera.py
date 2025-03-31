@@ -6,7 +6,7 @@ from turbojpeg import TurboJPEG
 jpeg = TurboJPEG()
 
 class ThreadedCamera:
-    def __init__(self, camera_index):
+    def __init__(self, camera_index, fps=15):
         self.camera = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
         self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         self.camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
@@ -14,6 +14,9 @@ class ThreadedCamera:
         # Lower resolution for better performance
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+        
+        # Explicitly set FPS to reduce load on the pipeline
+        self.camera.set(cv2.CAP_PROP_FPS, fps)
         
         self.latest_frame = None
         self.lock = threading.Lock()
@@ -31,7 +34,7 @@ class ThreadedCamera:
             loop_start = time.time()
             
             if self.camera.isOpened():
-                self.camera.grab()  # Discard stale frame
+                #self.camera.grab()  # Discard stale frame
                 success, frame = self.camera.read()
                 if success:
                     with self.lock:

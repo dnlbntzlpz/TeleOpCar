@@ -289,6 +289,11 @@ let previousBrake = 0;
 let lastCommandTime = 0; // Track the last time a command was sent
 const commandInterval = 100; // Minimum interval between commands in milliseconds
 
+// Add these variables at the top of your script
+// Track whether buttons were pressed in the previous frame to prevent repeated triggering
+let prevButton12Pressed = false;
+let prevButton13Pressed = false;
+
 function detectGamepad() {
     const gamepads = navigator.getGamepads();
     let gamepadConnected = false;
@@ -341,18 +346,37 @@ function processGamepadInput(gamepad) {
 
     let steering = gamepad.axes[0] * 360;
 
-    // Change drive mode with buttons
-    if (gamepad.buttons[12].pressed) {
-        drivingMode = "forward";
-        updateDriveModeIndicator();
+    // Improved button handling with edge detection to prevent rapid toggling
+    // Only trigger direction change on button press (not while holding)
+    const button12Pressed = gamepad.buttons[12].pressed;
+    const button13Pressed = gamepad.buttons[13].pressed;
+    
+    // Button 12 (forward) rising edge detection
+    if (button12Pressed && !prevButton12Pressed) {
+        if (!currentDirection) { // If currently in reverse
+            console.log("Forward button pressed - switching to forward");
+            setDriveMode(true); // Switch to forward
+        }
     }
-    if (gamepad.buttons[13].pressed) {
-        drivingMode = "reverse";
-        updateDriveModeIndicator();
+    
+    // Button 13 (reverse) rising edge detection
+    if (button13Pressed && !prevButton13Pressed) {
+        if (currentDirection) { // If currently in forward
+            console.log("Reverse button pressed - switching to reverse");
+            setDriveMode(false); // Switch to reverse
+        }
     }
+    
+    // Update button states for next frame
+    prevButton12Pressed = button12Pressed;
+    prevButton13Pressed = button13Pressed;
 
     updateSteeringWheel(steering);
-    updatePedals(accelerator, brake);
+    
+    // Only process pedal input if we're not in the middle of a direction change
+    if (!directionChangeInProgress) {
+        updatePedals(accelerator, brake);
+    }
 }
 
 function handleGamepadInput() {
@@ -366,7 +390,8 @@ function handleGamepadInput() {
     let accelerator = gp.axes[2]; 
     let brake = gp.axes[5];      
 
-    let direction = drivingMode;
+    // Always use the global currentDirection instead of drivingMode
+    let isForward = currentDirection;
 
     let steeringAngle = Math.round(((steering + 1) / 2) * 180);
     let accelValue = accelerator < 0 ? Math.abs(accelerator) : 0.0;
@@ -388,16 +413,18 @@ function handleGamepadInput() {
             previousSteering = steeringAngle;
         }
 
-        // Only send accelerator command if the value has changed
-        if (Math.abs(previousAccelerator - accelValue) > 0.01) {
-            if (direction === "forward") {
+        // Don't send acceleration commands if direction change is in progress
+        if (!directionChangeInProgress) {
+            // Only send accelerator command if the value has changed
+            if (Math.abs(previousAccelerator - accelValue) > 0.01) {
+                // THIS IS THE KEY CHANGE: 
+                // For reverse, send a negative acceleration value to the backend
+                if (!isForward) {
+                    accelValue = -accelValue;
+                }
                 sendControllerCommand("accelerator", accelValue);
-            } else if (direction === "reverse") {
-                // Map the reverse value from 0 to 1 to -0.1 to -1
-                const reverseValue = -((1 - accelValue) * 0.9 + 0.1);
-                sendControllerCommand("accelerator", reverseValue);
+                previousAccelerator = accelValue;
             }
-            previousAccelerator = accelValue;
         }
 
         // Only send brake command if the value has changed
@@ -465,10 +492,157 @@ function updateSteeringWheel(angle) {
     document.getElementById("steering-wheel").style.transform = `rotate(${angle}deg)`;
 }
 
-function updatePedals(accel, brake) {
-    document.getElementById("accelerator-fill").style.height = `${Math.abs(accel) * 100}%`;
-    document.getElementById("brake-fill").style.height = `${Math.abs(brake) * 100}%`;
+// Add these variables at the top of your script
+let currentDirection = true; // true = forward, false = reverse
+let directionChangeInProgress = false;
+let lastDirectionChangeTime = 0;
+const DIRECTION_CHANGE_COOLDOWN = 500; // ms to prevent rapid direction changes
+
+function setDriveMode(isForward) {
+    // Prevent rapid toggling of direction
+    const now = Date.now();
+    if (now - lastDirectionChangeTime < DIRECTION_CHANGE_COOLDOWN) {
+        console.log(`Direction change ignored - cooldown active (${DIRECTION_CHANGE_COOLDOWN - (now - lastDirectionChangeTime)}ms remaining)`);
+        return; // Ignore direction changes during cooldown
+    }
+    
+    // Skip if direction is already set to the requested value
+    if (isForward === currentDirection) {
+        console.log(`Direction already set to ${isForward ? 'forward' : 'reverse'}, ignoring redundant change`);
+        return;
+    }
+    
+    console.log(`Direction change requested: ${isForward ? 'forward' : 'reverse'}`);
+    
+    directionChangeInProgress = true;
+    lastDirectionChangeTime = now;
+    
+    // Update UI to reflect new direction
+    const toggle = document.getElementById('drive-mode-toggle');
+    if (toggle) {
+        if (isForward) {
+            toggle.classList.remove('drive-mode-reverse');
+            toggle.classList.add('drive-mode-forward');
+            const indicator = document.querySelector('.drive-mode-indicator');
+            if (indicator) {
+                indicator.style.top = '5px';
+                indicator.style.bottom = '';
+            }
+        } else {
+            toggle.classList.remove('drive-mode-forward');
+            toggle.classList.add('drive-mode-reverse');
+            const indicator = document.querySelector('.drive-mode-indicator');
+            if (indicator) {
+                indicator.style.bottom = '5px';
+                indicator.style.top = '';
+            }
+        }
+    }
+    
+    // First stop the motors completely
+    sendControllerCommand('accelerator', 0.0);
+    console.log("Motors stopping before direction change");
+    
+    // After motors have stopped, set the new direction
+    setTimeout(() => {
+        // Store the new direction globally
+        currentDirection = isForward;
+        // Also update drivingMode to stay in sync
+        drivingMode = isForward ? "forward" : "reverse";
+        
+        // Send the direction command
+        sendControllerCommand('direction', isForward ? 1.0 : 0.0);
+        console.log(`Direction set to ${isForward ? 'forward' : 'reverse'}`);
+        
+        // Reset the direction change flag after a delay to ensure command is processed
+        setTimeout(() => {
+            directionChangeInProgress = false;
+            console.log("Direction change completed, resuming normal operation");
+        }, 200);
+    }, 300); // Allow 300ms for the motors to stop before changing direction
 }
+
+// Add a variable to track the last sent accel value for debouncing
+let lastSentAccel = 0;
+const ACCEL_CHANGE_THRESHOLD = 0.05; // Only send if change is at least 5%
+
+function updatePedals(accel, brake) {
+    const acceleratorFill = document.getElementById('accelerator-fill');
+    const brakeFill = document.getElementById('brake-fill');
+    
+    // Display the raw pedal input value in UI
+    if (acceleratorFill) {
+        const displayValue = Math.abs(accel) * 100;
+        acceleratorFill.style.height = `${displayValue}%`;
+    }
+    
+    if (brakeFill) {
+        brakeFill.style.height = `${brake * 100}%`;
+    }
+    
+    // Don't send acceleration commands if we're in the middle of a direction change
+    if (directionChangeInProgress) {
+        console.log("Acceleration command ignored - direction change in progress");
+        return;
+    }
+    
+    // When sending the command, only send acceleration if it's significant
+    if (accel > 0.05) {
+        // For reverse, send a negative acceleration value
+        const adjustedAccel = !currentDirection ? -accel : accel;
+        
+        // Only send if the change is significant enough
+        if (Math.abs(adjustedAccel - lastSentAccel) > ACCEL_CHANGE_THRESHOLD) {
+            sendControllerCommand('accelerator', adjustedAccel);
+            lastSentAccel = adjustedAccel;
+        }
+    } else if (accel !== 0) {
+        // For very small values, still send them with less frequency
+        const adjustedAccel = !currentDirection ? -accel : accel;
+        sendControllerCommand('accelerator', adjustedAccel);
+        lastSentAccel = adjustedAccel;
+    } else if (accel === 0 && lastSentAccel !== 0) {
+        // Ensure zero is sent when the pedal is released
+        sendControllerCommand('accelerator', 0);
+        lastSentAccel = 0;
+    }
+    
+    if (brake !== 0) {
+        sendControllerCommand('brake', brake);
+    }
+}
+
+// Add or modify the event listener for the drive mode toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const driveModeToggle = document.getElementById('drive-mode-toggle');
+    if (driveModeToggle) {
+        driveModeToggle.addEventListener('click', function() {
+            // Set a flag to indicate the toggle was just clicked
+            driveModeToggleJustClicked = true;
+            
+            // Get current direction from UI element, not global variable
+            const isCurrentlyForward = driveModeToggle.classList.contains('drive-mode-forward');
+            
+            // Toggle direction (true = forward, false = reverse)
+            setDriveMode(!isCurrentlyForward);
+            
+            // Reset the flag after a delay
+            setTimeout(() => {
+                driveModeToggleJustClicked = false;
+            }, 500);
+        });
+    }
+    
+    // Initialize the currentDirection variable based on UI state
+    const driveIndicator = document.querySelector('.drive-mode-indicator');
+    const isDriveForward = driveIndicator ? 
+        driveIndicator.classList.contains('forward') : true;
+    
+    currentDirection = isDriveForward;
+    
+    // Also sync drivingMode with currentDirection
+    drivingMode = isDriveForward ? "forward" : "reverse";
+});
 
 // 5. Telemetry Handling
 function updateTelemetry() {
@@ -2191,18 +2365,67 @@ window.addEventListener('orientationchange', function() {
 })();
 
 function setDriveMode(isForward) {
-    const toggle = document.getElementById('drive-mode-toggle');
-    if (isForward) {
-        toggle.classList.remove('drive-mode-reverse');
-        toggle.classList.add('drive-mode-forward');
-        document.querySelector('.drive-mode-indicator').style.top = '5px';
-        document.querySelector('.drive-mode-indicator').style.bottom = '';
-    } else {
-        toggle.classList.remove('drive-mode-forward');
-        toggle.classList.add('drive-mode-reverse');
-        document.querySelector('.drive-mode-indicator').style.bottom = '5px';
-        document.querySelector('.drive-mode-indicator').style.top = '';
+    // Prevent rapid toggling of direction
+    const now = Date.now();
+    if (now - lastDirectionChangeTime < DIRECTION_CHANGE_COOLDOWN) {
+        console.log(`Direction change ignored - cooldown active (${DIRECTION_CHANGE_COOLDOWN - (now - lastDirectionChangeTime)}ms remaining)`);
+        return; // Ignore direction changes during cooldown
     }
+    
+    // Skip if direction is already set to the requested value
+    if (isForward === currentDirection) {
+        console.log(`Direction already set to ${isForward ? 'forward' : 'reverse'}, ignoring redundant change`);
+        return;
+    }
+    
+    console.log(`Direction change requested: ${isForward ? 'forward' : 'reverse'}`);
+    
+    directionChangeInProgress = true;
+    lastDirectionChangeTime = now;
+    
+    // Update UI to reflect new direction
+    const toggle = document.getElementById('drive-mode-toggle');
+    if (toggle) {
+        if (isForward) {
+            toggle.classList.remove('drive-mode-reverse');
+            toggle.classList.add('drive-mode-forward');
+            const indicator = document.querySelector('.drive-mode-indicator');
+            if (indicator) {
+                indicator.style.top = '5px';
+                indicator.style.bottom = '';
+            }
+        } else {
+            toggle.classList.remove('drive-mode-forward');
+            toggle.classList.add('drive-mode-reverse');
+            const indicator = document.querySelector('.drive-mode-indicator');
+            if (indicator) {
+                indicator.style.bottom = '5px';
+                indicator.style.top = '';
+            }
+        }
+    }
+    
+    // First stop the motors completely
+    sendControllerCommand('accelerator', 0.0);
+    console.log("Motors stopping before direction change");
+    
+    // After motors have stopped, set the new direction
+    setTimeout(() => {
+        // Store the new direction globally
+        currentDirection = isForward;
+        // Also update drivingMode to stay in sync
+        drivingMode = isForward ? "forward" : "reverse";
+        
+        // Send the direction command
+        sendControllerCommand('direction', isForward ? 1.0 : 0.0);
+        console.log(`Direction set to ${isForward ? 'forward' : 'reverse'}`);
+        
+        // Reset the direction change flag after a delay to ensure command is processed
+        setTimeout(() => {
+            directionChangeInProgress = false;
+            console.log("Direction change completed, resuming normal operation");
+        }, 200);
+    }, 300); // Allow 300ms for the motors to stop before changing direction
 }
 
 // Update the layout function to account for the horizontal control bar

@@ -13,8 +13,8 @@ if not rclpy.ok():
 ros2_interface = ROS2Interface()
 
 # Initialize cameras
-camera_1 = ThreadedCamera(camera_index=0)
-camera_2 = ThreadedCamera(camera_index=2)
+camera_1 = ThreadedCamera(camera_index=0, fps=15)
+camera_2 = ThreadedCamera(camera_index=2, fps=15)
 
 def index(request):
     return render(request, 'teleop/index.html')

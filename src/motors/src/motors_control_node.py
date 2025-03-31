@@ -74,7 +74,7 @@ class MotorControlNode(Node):
             # Set motor speed
             self.left_pwm.value = speed
             self.right_pwm.value = speed
- 
+
             # Set motor direction
             if is_forward:
                 self.left_dir.off()  # Forward
