@@ -5,3 +5,4 @@ src/bridge/src/.env
 build/
 install/
 log/
+logs/
