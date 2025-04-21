@@ -61,7 +61,7 @@ chmod +x startup.sh
 ./startup.sh
 ```
 
-4. Connect to the Web Interface
+### 4. Connect to the Web Interface
 
 Once the script is running, open your browser on the Raspberry Pi and navigate to:
 
