@@ -32,7 +32,7 @@ echo "Starting Django server..."
 python3 /home/pi/Desktop/TeleOpCar/backend/manage.py runserver 0.0.0.0:8071 > logs/server.log 2>&1 &
 
 # Start Cloudflare Tunnel
-echo "Starting Cloudflare tunnel..."
-cloudflared tunnel --url http://127.0.0.1:8071 > logs/cloudflared.log 2>&1 &
+#echo "Starting Cloudflare tunnel..."
+#cloudflared tunnel --url http://127.0.0.1:8071 > logs/cloudflared.log 2>&1 &
 
 echo "✅ All services started. You can now access the web interface at http://localhost:8071"

@@ -50,22 +50,27 @@ On the Raspberry Pi:
 ```bash
 git clone https://github.com/dnlbntzlpz/TeleOpCar.git
 cd teledriving-car
+```
 
 ### 3. Run the Startup Script
 
 This script launches all required ROS2 nodes, the Django server, and the Cloudflare tunnel (if configured):
 
+```
 chmod +x startup.sh
 ./startup.sh
+```
 
 4. Connect to the Web Interface
 
 Once the script is running, open your browser on the Raspberry Pi and navigate to:
 
+```
 http://localhost:8071
+```
 
 You should now see the live control dashboard where you can drive the car using:
-
+```
     W, A, S, D to move
 
     X to stop
@@ -73,3 +78,4 @@ You should now see the live control dashboard where you can drive the car using:
     C to center the steering servo
 
     Or use the Logitech G923 racing wheel (shifters and pedals)
+```
