@@ -1,42 +1,38 @@
 #!/bin/bash
 
-# Source ROS2 environment (if needed)
+# Source ROS2 and virtual environment
 source /opt/ros/jazzy/setup.bash
 source /home/pi/Desktop/TeleOpCar/lenv/bin/activate
 
-#Makes sure no sessions are running
-#tmux kill-session
+# Ensure log directory exists
+mkdir -p /home/pi/Desktop/TeleOpCar/logs
 
-# Get the Raspberry Pi's local IP address dynamically
+# Get IP address (for reference)
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
+echo "Starting services on IP: $IP_ADDRESS"
 
-# Start a new tmux session
-tmux new-session -d -s teleop
+# Start Motor Control Node
+echo "Starting motor control..."
+python3 /home/pi/Desktop/TeleOpCar/src/motors/src/motors_control_node.py > logs/motor.log 2>&1 &
 
-# Create separate windows for each script
-# Motor
-tmux new-window -t teleop:1 -n "Motor" "python3 /home/pi/Desktop/TeleOpCar/src/motors/src/motors_control_node.py"
-sleep 2  # 2-second delay
+# Start Servo Control Node
+echo "Starting servo control..."
+python3 /home/pi/Desktop/TeleOpCar/src/motors/src/servo_control_node.py > logs/servo.log 2>&1 &
 
-# Servo
-tmux new-window -t teleop:2 -n "Servo" "python3 /home/pi/Desktop/TeleOpCar/src/motors/src/servo_control_node.py"
-sleep 2  # 2-second delay
+# Start Brake Manager Node
+echo "Starting brake manager..."
+python3 /home/pi/Desktop/TeleOpCar/src/motors/src/brake_manager_node.py > logs/brake.log 2>&1 &
 
-# Ultrasonics
-tmux new-window -t teleop:3 -n "Obstacle" "python3 /home/pi/Desktop/TeleOpCar/src/sensors/src/obstacleDetection_node.py"
-sleep 2  # 2-second delay
+# Optional: Start Ultrasonic Obstacle Detection Node
+# echo "Starting ultrasonic sensor node..."
+# python3 /home/pi/Desktop/TeleOpCar/src/sensors/src/obstacleDetection_node.py > logs/ultrasonic.log 2>&1 &
 
-# Brake node
-tmux new-window -t teleop:4 -n "Brake" "python3 /home/pi/Desktop/TeleOpCar/src/motors/src/brake_manager_node.py"
-sleep 2  # 2-second delay
+# Start Django server
+echo "Starting Django server..."
+python3 /home/pi/Desktop/TeleOpCar/backend/manage.py runserver 0.0.0.0:8071 > logs/server.log 2>&1 &
 
-# Server (use dynamically found IP)
-tmux new-window -t teleop:5 -n "Server" "python3 /home/pi/Desktop/TeleOpCar/backend/manage.py runserver 0.0.0.0:8071"
-sleep 5  # 5-second delay
+# Start Cloudflare Tunnel
+echo "Starting Cloudflare tunnel..."
+cloudflared tunnel --url http://127.0.0.1:8071 > logs/cloudflared.log 2>&1 &
 
-# Cloudflare Tunnel (dynamically using the detected IP)
-tmux new-window -t teleop:6 -n "Cloudflared" "cloudflared tunnel --url http://127.0.0.1:8071"
-#sleep 2  # 2-second delay
-
-# Attach to tmux session (optional, if you want it to open automatically)
-tmux attach-session -t teleop
+echo "✅ All services started. You can now access the web interface at http://localhost:8071"
